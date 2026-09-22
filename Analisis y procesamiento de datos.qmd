@@ -27,9 +27,10 @@ editor:
 ## 1-Creación de la base de datos
 
 Los datos sobre los tanques, objeto de análisis, se extrajeron de
-información disponible en informes de los años 2015 al 2022, los cuales
-se encontraban clasificados según el tipo de auditoría realizada. En
-algunos casos, las auditorías técnicas son de condición interna ó
+informes realizados durante los años 2015 al 2022, los cuales
+se encontraban clasificados según el tipo de auditoría realizada. 
+
+En algunos casos, las auditorías técnicas son de condición interna ó
 externa, de control, de medición, de mantenimiento y en otros, se trata
 de auditorías ambientales, de seguridad, de asentamiento, de abandono de
 uso de tanques o de reparación, involucran variables ambientales, que

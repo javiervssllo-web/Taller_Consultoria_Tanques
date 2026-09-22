@@ -1,0 +1,573 @@
+---
+title: "Daños y vulnerabilidad de estructuras laminares bajo acciones extremas en  infraestructura de almacenamiento y proceso"
+author: "Matias Nestacio - Emiliano Estrada - Javier Vassallo"
+date: today
+date-format: "D [de] MMMM [de] YYYY"
+
+lang: es
+
+format:
+  html:
+    theme: dark
+    highlight-style: dracula
+    toc: true
+    toc-title: "Índice"
+    embed-resources: true
+    css: styles.css
+
+execute:
+  echo: true
+  warning: false
+  message: false
+editor: 
+  markdown: 
+    wrap: 72
+---
+
+## **1 - BASE DE DATOS**
+
+Los datos sobre los tanques, objeto de análisis, se extrajeron de
+informes realizados durante los años 2015 al 2022, los cuales se
+encontraban clasificados según el tipo de auditoría realizada.
+
+En algunos casos, las auditorías técnicas son de condición interna ó
+externa, de control, de medición, de mantenimiento y en otros, se trata
+de auditorías ambientales, de seguridad, de asentamiento, de abandono de
+uso de tanques o de reparación, involucran variables ambientales, que
+tratan, el entorno del tanque y/o la infraestructura existente en los
+alrededores. El criterio de inclusión de los tanques en la base de datos
+es que sul volumen sea mayor o igual a 500m3, priorizando aquellos
+tanques, que, por su escala operativa, representan un mayor riesgo
+potencial y mayor probabilidad de daños.
+
+A continuación, se explican los parámetros observados de las auditorias.
+
+### Información Disponible
+
+CLASIFICACION DE LA INFORMACION
+
+Los informes disponibles se clasificaron por número de documento y por
+año, de la siguiente manera:
+
+ID: número de reporte de tanque
+
+OAT: Numero de informe
+
+Año de informe
+
+### OAT/CIT
+
+El número CIT permite reconocer el tanque dentro del sistema de la base
+de datos de la organización que realiza las auditorias. En este caso, el
+número de OAT, es la identificación interna para determinar el origen de
+la información (número de informe/año de informe).
+
+### Ubicación (Lat/Long)
+
+La ubicación es importante a la hora de reconocer el tipo de clima al
+que se encuentra expuesto el tanque, como lo es por ejemplo la velocidad
+del viento a la que tiene que resistir. De la misma manera, el efecto
+del sismo, el tipo de suelo, la intensidad de lluvia, etc. Estas
+representan cargas externas, para lo cual la infraestructura debe estar
+preparada para soportar y seguir en servicio.
+
+### Estado
+
+Esta variable, permite conocer la situación del tanque, ya que implica,
+un escenario de carga y una condición de contorno diferente para la
+estabilidad del tanque.
+
+En operación, se puede considerar la condición de máxima presión
+hidrostática, asumiendo para este estado como un tanque lleno. Como
+señala Herrera (2007) en su documento, el líquido genera presiones que
+ante un sismo, puede aumentar el riesgo de pandeo de pata de elefante en
+la base, por superarse el límite crítico si el tanque es esbelto, H/D \>
+0.7. En la condición de vacío, el tanque es mas liviano y mucho mas
+vulnerable al viento. Por lo tanto, la relación de esbeltez también
+incide en una posible falla de pandeo por presión externa, lo cual se
+agrava, si el tanque no se encuentra rigidizado correctamente. La
+condición de abandono, determina que el tanque se encuentra listo para
+su reemplazo o que ha terminado su vida útil dentro de la planta o
+batería a la que pertenece. Sin embargo, cuando estos activos están
+presentes dentro de la infraestructura, existe un mayor riesgo de fallas
+catastróficas, debido a el avance de la corrosión que pueden tener, o al
+debilitamiento de sus componentes estructurales. Como consecuencia,
+mayor riesgo de daños en tanques cercanos que se encuentren en
+operación.
+
+### Producto
+
+Saber el producto que almacena un tanque es de gran importancia para
+realizar un análisis preciso de riesgos. Esto incluye comprender sus
+propiedades físicas y químicas, como la densidad, la volatilidad, la
+inflamabilidad y la toxicidad. Estos datos son esenciales para evaluar y
+mitigar posibles riesgos de seguridad, protección ambiental, y salud
+publica asociados con el almacenamiento y manipulación del producto. Es
+posible determinar el impacto que tiene la llama en función del tipo de
+combustible que participe en algún evento de explosión o incendio que
+involucre baterías de tanques, o plantas de refinerías. Por otro lado,
+según el trabajo de Herrera (2007), se menciona que el daño depende de
+las presiones hidrodinámicas, por lo tanto, el tipo de fluido define la
+masaoscilante máxima posible. Un fluido más denso incrementará las
+presiones de confinamiento y las fuerzas de inercia ante un sismo,
+aumentando la probabilidad de llegar al estado de "pata de elefante"
+incluso si el tanque no está al 100% de su capacidad. Los fluidos más
+pesados, y densidades más altas, requieren mayor esfuerzo de corte en la
+base y por lo tanto, mayor carga que podría desencadenar en mayor
+probabilidad de asentamientos. Fluidos más livianos o refinados, aunque
+tengan menor densidad, presentan tanques con mayor riesgo de incendio y
+por otro lado, de volcamiento, si no se encuentran anclados.
+
+### Prop. Físicas
+
+VOLUMEN/ALTURA/DIAMETRO/ESPESORES
+
+Aspectos como el tamaño, la forma, el espesor de las paredes y la
+ubicación de las soldaduras tienen un impacto directo en como se
+distribuyen las cargas y las tensiones dentro del tanque.  Además de la
+evaluación de la resistencia se evalúan las deformaciones que se
+producen en función de la geometría del tanque frente a solicitaciones
+externas, como se puede observar según Daño sísmico de tanque de acero
+(Juan Carlos Herrera, 2007). En dicho trabajo, se plantean los daños que
+se observaron en distintos eventos sísmicos y el análisis del parámetro
+H/D como predictor de modos de falla. Tanques esbeltos H/D \> 0,7 son
+tanques mucho más vulnerables a grandes esfuerzos de compresión en la
+base, generando pandeo “pata de elefante” (Figura 6‑4).
+
+![](images/clipboard-3566246108.png)
+
+*Figura 6‑4: Pandeo “pata de elefante” de la pared. Alaska-1964. (Juan
+Carlos Herrera, 2007)*
+
+Es fundamental aclarar que la relación entre la esbeltez y el volumen de
+los tanques no es lineal. La probabilidad de que un tanque sufra un daño
+severo (DS-4 o DS-5) aumenta considerablemente a medida que se
+incrementa la relación H/D. Un tanque que es tanto de gran volumen como
+esbelto enfrenta un riesgo estructural mucho mayor en comparación con
+uno que tiene el mismo volumen pero un diámetro más amplio.
+
+### Año de Montaje
+
+Conocer el año de montaje permite determinar la edad del tanque y los
+años en servicio. Una función importante de analizar, podría ser los
+daños más frecuentes en base a los años en servicio. Como lo es, la
+corrosión del metal ya que se trata de un proceso de degradación con el
+paso del tiempo. Conocer si el tanque cumple o no con las regulaciones
+vigentes, analizar la evolución de los estándares de diseño, realizar
+análisis de seguridad ya que tanques más antiguos pueden tener más
+problemas de corrosión o desgaste que podrían comprometer su integridad.
+Por otro lado, la edad del tanque permite planificar el tipo de
+mantenimiento necesario para garantizar la seguridad y el cumplimiento
+normativo de las instalaciones petroleras. Por otro lado, tanques de
+mayor edad, han pasado por más ciclos de llenado y vaciado, lo que suele
+derivar en asentamientos diferenciales.
+
+### Empresa
+
+Conocer la empresa, puede dar información de la distribución de los
+tanques según se trate de una operadora, o una planta como una
+refinería. En el caso de un tanque con mayor vulnerabilidad estructural,
+y que se encuentre en una infraestructura densamente poblada, puede
+provocar una falla o un colapso, ocasionando un desastre en cadena. El
+tamaño y tipo de empresa, puede correlacionarse con el rigor de sus
+programas de mantenimiento, parques más grandes de activos, suelen tener
+protocolos de inspección muy estrictos y presupuestos asignados para
+reparaciones preventivas. A veces empresas más pequeñas o de servicios,
+operan con márgenes de inversiones más ajustados.
+
+### Nomenclatura
+
+NOMENCLATURA DEL TANQUE/NOMBRE DE INFORME INTERNO/TIPO DE INFORME
+
+La nomenclatura es parte de la identificación del tanque y el nombre del
+informe interno para tener trazabilidad de la información extraída.
+
+### Virolas
+
+CANTIDAD DE VIROLAS/ESPESOR PRIMER VIROLA
+
+El espesor influye en la resistencia del tanque frente a la acción
+externa sobre su superficie. A partir del espesor de la primera virola,
+se puede determinar el resto de los espesores a través del “Método de un
+Pie” para tanques de diámetro menores a 60m. Este valor es importante,
+debido a que la primer virola es la que recibe mayor presión y
+relacionando esto con la edad del tanque, es posible analizar la perdida
+de integridad del tanque. Por otro lado, también es la que recibe mayor
+carga vertical y esto para tanques esbeltos H/D \> 0.7, según Herrera
+(2007), produce mayor riesgo de pandeo.
+
+Conocer la cantidad de virolas, ayuda a comprender la capacidad de
+almacenamiento, estabilidad estructural, además facilita la inspección y
+el mantenimiento adecuado. Además un tanque con bastantes virolas
+cortas, exhibe un comportamiento levemente diferente al de uno con
+escasas virolas más altas ante fenómenos de abolladura.
+
+### Resultado del informe
+
+Esta información permite conocer las tareas a realizarse en el tanque,
+en función del resultado de la auditoria. Así se puede extrapolar la
+vida útil remanente del tanque, conocer los procesos de mantenimiento
+y/o reparación aplicados, conocer la eficiencia operativa y la
+fiabilidad de las instalaciones de almacenamiento de productos
+almacenados.
+
+### Diques de Contención
+
+DC-INDIVIDUAL/COMPARTIDO/DIMENSIONES
+
+Los diques de contención son parte de la infraestructura de los tanques
+y forman parte de un requisito obligatorio. Desde un punto de vista
+ambiental interesa conocer el estado de dicha contención o su existencia
+frente a la posibilidad de derrames, y/o protección de la
+infraestructura circundante. Por otro lado, frente a la acción del
+viento, es posible estudiar el efecto que tienen estas estructuras en
+como pantallas frente a la superficie de un tanque.
+
+![](images/clipboard-2423102979.png){fig-align="center"}
+
+![](images/clipboard-3950683073.png)
+
+*Figura 6‑6a: A la izquierda, lay out en imagen satelital. A la derecha,
+imagen de interior del recinto de contención*
+
+### Tipo de Techo
+
+El tipo de techo puede afectar la seguridad operativa del tanque, los
+techos flotantes son más propensos a problemas como la acumulación de
+gases inflamables debajo del techo. Algunos tipos de techos son más
+adecuados para ciertos tipos de productos petrolíferos ligeros, mientras
+que los techos fijos pueden ser más adecuados para productos más pesados
+o viscosos. Por otro lado, el tipo de techo puede influir en los
+requisitos de mantenimiento y reparación del tanque. Los techos
+flotantes pueden requerir inspecciones más frecuentes y mantenimiento
+especializado. El tipo de techo influye en el comportamiento estructural
+del tanque frente a acciones térmicas, ya que estas generan muchas
+deformaciones. También frente a la acción del viento sobre la corona del
+tanque, y por otro lado, en tanques bajos (H/D \< 0.7), según las curvas
+de fragilidad del documento (Figura 8). Daño sísmico de tanque de acero
+(Juan Carlos Herrera, 2007), se demostró que son más propensos a
+problemas de *sloshing* (oleaje) afectando la estructura del techo.
+
+### Corrosión y Asentamientos
+
+MEDICION DE CORROSION/MEDICION DE ASENTAMIENTOS
+
+La corrosión puede comprometer la integridad estructural del tanque, por
+ello, conocer la existencia de estas mediciones puede colaborar en el
+desarrollo de medidas preventivas, correctivas, teniendo en cuenta las
+consecuencias y el estado operativo del tanque.
+
+Los asentamientos pueden indicar problemas de la base del tanque, como
+la compactación del suelo o falta de capacidad de carga. Conocer la
+magnitud y la naturaleza de los asentamientos es esencial para evaluar
+la integridad estructural del tanque.  También, se puede comprometer la
+estabilidad del tanque y aumentar riesgo de falla estructural, incluido
+vuelco o deformaciones excesivas. También los asentamientos
+diferenciales pueden causar tensiones de deseadas en las soldaduras y
+juntas del tanque, lo que aumenta el riesgo de fugas y derrames
+
+### Comentarios y Adjuntos
+
+En este ítem se pretende resaltar información que pueda ser de utilidad,
+o aporte mayor claridad a la base de datos, de manera visual o
+descriptiva. En algunos casos, se adjuntan imágenes, croquis de
+ubicación y de geometrías.
+
+## **2 - EDA**
+
+ANALISIS EXPLORATORIO DE DATOS
+
+### Lectura de los datos
+
+Se comienza importando los datos y cargando las librerías a utilizar en
+el informe. Se utilizará como marco de referencia del entorno de
+tidyverse.
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, results='hide'}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(skimr)
+library(naniar)
+library(lubridate)
+
+# Lectura del xml
+tanques <- read_excel("Datos/Datos_Tanques.xlsx") %>%
+  clean_names()
+
+```
+
+### Inspección visual
+
+Se realiza una inspección visual inicial de los datos para observar
+tipos de variables y datos faltantes.
+
+```{r}
+print(tanques)
+```
+
+Son 263 individuos (tanques) a los que se les observaron 27 variables.
+
+### Valores faltantes
+
+En la inspección visual se observa una gran cantidad de datos faltantes
+distribuidos en todas las variables, por lo que se procede a identificar
+la cantidad de valores faltantes.
+
+```{r}
+# Variables con la mayor cantidad de datos faltantes
+tanques %>%
+  summarise(across(everything(),
+                   ~ sum(is.na(.)))) %>%
+  pivot_longer(everything(),
+               names_to = "variable",
+               values_to = "faltantes") %>%
+  arrange(desc(faltantes)) |> 
+  head()
+
+```
+
+Se observa que la variable `dc_compartido` (si se compartió información
+sobre los diques de contención) es la que mayor cantidad de datos
+faltantes posee, luego `comentarios` (comentarios sobre el informe de
+auditoría) y en tercer lugar `dc_dimensiones`. También entran en el top
+6 la variable `dc_individual`. Como los diques de contención son
+construcciones con el objetivo de salvaguardar el medioambiente y no
+forman parte de las propiedades físicas del tanque, no se utilizará
+información sobre los diques de contención en el análisis.
+
+```{r}
+# se eliminan las variables a no utilizar luego del analisis de datos faltantes
+tanques <- tanques |> select(!(c(dc_compartido, 
+                                 comentarios,
+                                 dc_dimensiones,
+                                 dc_individual)))
+
+```
+
+### Tipo de datos
+
+Revisamos que las variables esten almacenadas con el tipo de datos que
+corresponde:
+
+```{r}
+
+tipos_datos <- tibble(
+  variable = names(tanques),
+  tipo = sapply(tanques, class)
+)
+
+tipos_datos
+```
+
+Todas las variables se clasificaron en *numeric* o *character*.
+
+Las variables *cuantitativas* están correctamente almacendas como
+*numeric* y no hace falta convertirlas:
+
+```{r}
+tipos_datos |> filter(tipo == "numeric")
+```
+
+Vemos las *cualitativas*:
+
+```{r}
+tipos_datos |> filter(tipo == "character")
+```
+
+Descartamos las siguientes variables del análisis:
+
+- `oat`, `cit` y `taah` porque son etiquetas identificatorias y
+  utilizaremos `id` como identificador del tanque.
+
+- `ubicacion` debido a que su información ya se encuentra con precisión
+  en las variables `long` y `lat`.
+
+- `empresa`, `archivo_doc`, `adjuntos` y `tipoinforme` por el hecho de
+  que este estudio se centra unicamente en las propiedades físicas de
+  los tanques y estas variables no aportan información utlizable.
+
+```{r}
+# se eliminan las variables cualitativas a no utilizar
+tanques <- tanques |> select(!(c(oat,
+                                 cit,
+                                 taah,
+                                 ubicacion,
+                                 empresa,
+                                 archivo_doc,
+                                 adjuntos,
+                                 tipoinforme)))
+```
+
+Convertimos las variables `estado`, `tipo_de_techo`, `resultado_informe`
+a categóricas:
+
+```{r}
+# variables tipo character a factores
+tanques <- tanques %>%
+  mutate(
+    estado = as.factor(estado),
+    tipo_de_techo = as.factor(tipo_de_techo),
+    resultado_informe = as.factor(resultado_informe)
+  )
+
+```
+
+Convertimos las variables dicotómicas `medicion_de_asent_dif` y
+`medicion_de_corrosion` a logicas:
+
+```{r}
+# variables tipo character a tipo lógicas
+tanques <- tanques |> 
+  mutate(
+    medicion_de_asent_dif = case_when(
+      medicion_de_asent_dif == "SI" ~ TRUE,
+      medicion_de_asent_dif == "NO" ~ FALSE,
+      is.na(medicion_de_asent_dif) ~ NA
+    ),
+    medicion_de_corrosion = case_when(
+      medicion_de_corrosion == "SI" ~ TRUE,
+      medicion_de_corrosion == "NO" ~ FALSE,
+      is.na(medicion_de_corrosion) ~ NA
+    )
+  )
+```
+
+Se debe corregir la variable `producto` ya que por falta de criterios de
+estandarización en la toma de datos tiene muchos valores diferentes para
+indicar lo mismo, por ejemplo, se observa "AGUA + PETROLEO" y también
+"PETROLEO + AGUA" o "AGUA e HIDROCARBUROS".
+
+```{r}
+# pendiente de realizar
+```
+
+A las variables `lat` y `long` hay que procesarlas para poder trabajar
+con ellas. Eso se realiza en el punto 3 del informe (Datos
+Georreferenciados).
+
+Se muestra como quedó la base de datos:
+
+```{r}
+head(tanques)
+```
+
+## **3-Datos Georreferenciados**
+
+```{r}
+
+#Funcion para pasar las coordenadas de Formato "38°57'04''S" a decimal
+
+#Todos los tanques se encuentran en Argentina por lo tanto longitud y latitud son siempre negativas en sistema decimal (los datos se cargaron especificando S, O, W ó nada)
+
+library(tidyverse)
+library(stringr)
+
+dms_a_decimal <- function(x, tipo = c("lat", "long")) {
+  
+  tipo <- match.arg(tipo)
+  
+  nums <- str_extract_all(x, "\\d+") %>%
+    map(~ as.numeric(.x))
+  
+  decimal <- map_dbl(nums, ~{
+    .x[1] + .x[2]/60 + .x[3]/3600
+  })
+  
+  # Determinar signo
+  signo <- case_when(
+    str_detect(x, "[Ss]") ~ -1,
+    str_detect(x, "[WwOo]") ~ -1,
+    str_detect(x, "[NnEe]") ~ 1,
+    tipo == "lat" ~ -1,   # si no hay letra asumir Sur
+    tipo == "long" ~ -1,  # si no hay letra asumir Oeste
+    TRUE ~ 1
+  )
+  
+  decimal * signo
+}
+
+#Cambio de coordendas de la base
+tanques <- tanques %>%
+  mutate(
+    lat_dd = dms_a_decimal(lat),
+    long_dd = dms_a_decimal(long)
+  )
+
+tanques_mapa <- tanques %>%
+  filter(
+    !is.na(lat_dd),
+    !is.na(long_dd)
+  )
+
+#Verificación. En patagonia LAT entre -36 y -41, LONG entre -66 y -71
+summary(tanques_mapa $lat_dd)
+summary(tanques_mapa $long_dd)
+```
+
+Gráficamos en mapa
+
+```{r}
+library(sf)
+library(ggspatial)   # barra de escala y norte
+
+tanques_sf <- tanques_mapa %>%
+  st_as_sf(
+    coords = c("long_dd", "lat_dd"),
+    crs = 4326,
+    remove = FALSE
+  )
+
+#Grafico con ggspatial mapa estatico
+library(ggplot2)
+library(ggspatial)
+
+ggplot() +
+  annotation_map_tile(type = "osm") +
+  geom_sf(
+    data = tanques_sf,
+    aes(color = estado),
+    size = 2
+  ) +
+  annotation_scale(location = "bl") +
+  annotation_north_arrow(location = "tr") +
+  coord_sf()
+
+```
+
+Creamos mapa interactivo con referencia satelital
+
+Es especialmente útil para inspeccionar la ubicación real de los tanques
+sobre imágenes satelitales.
+
+```{r}
+library(leaflet)
+
+pal <- colorFactor(
+  c("green","orange","red"),
+  tanques_sf$estado
+)
+
+leaflet(tanques_sf) %>%
+  addProviderTiles(
+    providers$Esri.WorldImagery
+  ) %>%
+  addCircleMarkers(
+    radius = 5,
+    color = ~pal(estado),
+    stroke = FALSE,
+    fillOpacity = 0.8,
+    popup = ~paste(
+      "<b>ID:</b>", id, "<br>",
+      "<b>Empresa:</b>", empresa, "<br>",
+      "<b>Estado:</b>", estado, "<br>",
+      "<b>Volumen:</b>", volumen
+    )
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~estado,
+    title = "Estado"
+  )
+```
