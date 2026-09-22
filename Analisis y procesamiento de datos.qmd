@@ -35,7 +35,7 @@ de auditorías ambientales, de seguridad, de asentamiento, de abandono de
 uso de tanques o de reparación, involucran variables ambientales, que
 tratan, el entorno del tanque y/o la infraestructura existente en los
 alrededores. El criterio de inclusión de los tanques en la base de datos
-es que sul volumen sea mayor o igual a 500m3, priorizando aquellos
+es que su volumen sea mayor o igual a 500m3, priorizando aquellos
 tanques, que, por su escala operativa, representan un mayor riesgo
 potencial y mayor probabilidad de daños.
 
@@ -208,13 +208,7 @@ ambiental interesa conocer el estado de dicha contención o su existencia
 frente a la posibilidad de derrames, y/o protección de la
 infraestructura circundante. Por otro lado, frente a la acción del
 viento, es posible estudiar el efecto que tienen estas estructuras en
-como pantallas frente a la superficie de un tanque. (Figura
-2.2.1‑1-Figura 2.2.1‑2)
-
-Figura 6‑6: A la izquierda Lay out en imagen satelital, a la derecha
-imagen de interior del recinto de contención.
-
-### TIPO DE TECHO
+como pantallas frente a la superficie de un tanque.
 
 El tipo de techo puede afectar la seguridad operativa del tanque, los
 techos flotantes son más propensos a problemas como la acumulación de
@@ -228,9 +222,9 @@ especializado. El tipo de techo influye en el comportamiento estructural
 del tanque frente a acciones térmicas, ya que estas generan muchas
 deformaciones. También frente a la acción del viento sobre la corona del
 tanque, y por otro lado, en tanques bajos (H/D \< 0.7), según las curvas
-de fragilidad del documento (Figura 8). Daño sísmico de tanque de acero
-(Juan Carlos Herrera, 2007), se demostró que son más propensos a
-problemas de *sloshing* (oleaje) afectando la estructura del techo.
+de fragilidad. En Daño sísmico de tanque de acero (Juan Carlos Herrera,
+2007), se demostró que son más propensos a problemas de *sloshing*
+(oleaje) afectando la estructura del techo.
 
 ### MEDICION DE CORROSION/MEDICION DE ASENTAMIENTOS
 
@@ -270,11 +264,9 @@ library(lubridate)
 # Lectura del xml
 tanques <- read_excel("Datos/Datos_Tanques.xlsx") %>%
   clean_names()
-
-glimpse(tanques)
 ```
 
-Inspección inicial
+### Inspección inicial
 
 ```{r}
 dim(tanques)
@@ -286,7 +278,7 @@ head(tanques)
 summary(tanques)
 ```
 
-Valores faltantes
+### Valores faltantes
 
 ```{r}
 sum(is.na(tanques))
@@ -302,7 +294,7 @@ tanques %>%
 
 ```
 
-Tipo de Datos
+### Tipo de Datos
 
 ```{r}
 glimpse(tanques)
@@ -412,9 +404,11 @@ ggplot() +
   coord_sf()
 
 ```
+
 Creamos mapa interactivo con referencia satelital
 
-Es especialmente útil para inspeccionar la ubicación real de los tanques sobre imágenes satelitales.
+Es especialmente útil para inspeccionar la ubicación real de los tanques
+sobre imágenes satelitales.
 
 ```{r}
 library(leaflet)
@@ -447,4 +441,3 @@ leaflet(tanques_sf) %>%
     title = "Estado"
   )
 ```
-
