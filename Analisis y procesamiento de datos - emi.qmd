@@ -223,9 +223,9 @@ infraestructura circundante. Por otro lado, frente a la acción del
 viento, es posible estudiar el efecto que tienen estas estructuras en
 como pantallas frente a la superficie de un tanque.
 
-![](images/clipboard-2423102979.png){fig-align="center"}
-
-![](images/clipboard-3950683073.png)
+|                                      |                                      |
+|------------------------------------|------------------------------------|
+| ![](images/clipboard-2423102979.png) | ![](images/clipboard-3950683073.png) |
 
 *Figura 6‑6a: A la izquierda, lay out en imagen satelital. A la derecha,
 imagen de interior del recinto de contención*
@@ -280,7 +280,7 @@ ANALISIS EXPLORATORIO DE DATOS
 ### Lectura de los datos
 
 Se comienza importando los datos y cargando las librerías a utilizar en
-el informe. Se utilizará como marco de referencia del entorno de
+el informe. Se utilizará como marco de referencia el entorno de
 tidyverse.
 
 ```{r, ECHO=FALSE, warning=FALSE, message=FALSE, results='hide'}
@@ -306,7 +306,8 @@ tipos de variables y datos faltantes.
 print(tanques)
 ```
 
-Son 263 individuos (tanques) a los que se les observaron 27 variables.
+Son 263 individuos (tanques) a los que se les observaron 27 variables. A
+priori se estima que hay muchos valores faltantes.
 
 ### Valores faltantes
 
@@ -327,14 +328,17 @@ tanques %>%
 
 ```
 
-Se observa que la variable `dc_compartido` (si se compartió información
-sobre los diques de contención) es la que mayor cantidad de datos
-faltantes posee, luego `comentarios` (comentarios sobre el informe de
-auditoría) y en tercer lugar `dc_dimensiones`. También entran en el top
-6 la variable `dc_individual`. Como los diques de contención son
-construcciones con el objetivo de salvaguardar el medioambiente y no
-forman parte de las propiedades físicas del tanque, no se utilizará
-información sobre los diques de contención en el análisis.
+Se observa que la variable `dc_compartido` (que indica si se compartió
+información sobre los diques de contención) es la que mayor cantidad de
+datos faltantes posee, luego `comentarios` (comentarios del inspector
+sobre el informe de auditoría) y en tercer lugar `dc_dimensiones`.
+También entra en el top 6 la variable `dc_individual`.
+
+Como los diques de contención son construcciones con el objetivo de
+salvaguardar el medioambiente y no forman parte de las propiedades
+físicas del tanque, y dado que es el punto donde más datos faltantes se
+observan, no se utilizará información sobre los diques de contención en
+el análisis.
 
 ```{r}
 # se eliminan las variables a no utilizar luego del analisis de datos faltantes
@@ -347,7 +351,7 @@ tanques <- tanques |> select(!(c(dc_compartido,
 
 ### Tipo de datos
 
-Revisamos que las variables esten almacenadas con el tipo de datos que
+Revisamos que las variables esten almacenadas con el tipo de dato que
 corresponde:
 
 ```{r}
@@ -362,7 +366,7 @@ tipos_datos
 
 Todas las variables se clasificaron en *numeric* o *character*.
 
-Las variables *cuantitativas* están correctamente almacendas como
+Las variables *cuantitativas* están correctamente almacenadas como
 *numeric* y no hace falta convertirlas:
 
 ```{r}
@@ -383,9 +387,9 @@ Descartamos las siguientes variables del análisis:
 - `ubicacion` debido a que su información ya se encuentra con precisión
   en las variables `long` y `lat`.
 
-- `empresa`, `archivo_doc`, `adjuntos` y `tipoinforme` por el hecho de
-  que este estudio se centra unicamente en las propiedades físicas de
-  los tanques y estas variables no aportan información utlizable.
+- `archivo_doc`, `adjuntos` y `tipoinforme` por el hecho de que este
+  estudio se centra unicamente en las propiedades físicas de los tanques
+  y estas variables no aportan información utlizable.
 
 ```{r}
 # se eliminan las variables cualitativas a no utilizar
@@ -393,7 +397,6 @@ tanques <- tanques |> select(!(c(oat,
                                  cit,
                                  taah,
                                  ubicacion,
-                                 empresa,
                                  archivo_doc,
                                  adjuntos,
                                  tipoinforme)))
@@ -436,10 +439,293 @@ tanques <- tanques |>
 Se debe corregir la variable `producto` ya que por falta de criterios de
 estandarización en la toma de datos tiene muchos valores diferentes para
 indicar lo mismo, por ejemplo, se observa "AGUA + PETROLEO" y también
-"PETROLEO + AGUA" o "AGUA e HIDROCARBUROS".
+"PETROLEO + AGUA" o "AGUA CON PETROLEO", etc.
+
+Visualizando los valores que toma la variable identificamos que algunas
+categorias presentan muchas observaciones, como por ejemplo:
+
+- AGUA
+
+- PETROLEO
+
+- PETROLEO + AGUA
+
+- GAS OIL, etc
+
+Por lo que a ellas las dejamos y solo estandarizamos el nombre.
+
+Luego vemos que hay mucha diversidad de productos. En vez de agruparlos
+a todos juntos en una categoría "OTROS", los agrupamos por su densidad
+ya que esta propiedad es muy importante para entender las cargas del
+producto sobre las paredes de los tanques. Las categorías son:
+
+- LIVIANOS (\~0.65–0.75 g/cm³)
+
+- INTERMEDIOS (\~0.78–0.83 g/cm³)
+
+- PESADOS (\~0.83–0.95 g/cm³)
+
+A los restantes los agrupamos en OTROS por no tener información sobre
+ellos o por no poseer más de una o dos observaciones.
 
 ```{r}
-# pendiente de realizar
+#| message: false
+#| warning: false
+#| include: false
+# Hay 145 valores unicos en la variable producto
+unique(tanques$producto)
+
+# Hay que hacer una tabla de equivalencias para estandarizar nombres y agrupar
+tanques <- tanques |> 
+  mutate(
+    producto = recode(producto,
+                      "Agua" = "AGUA",
+                      "AGUA DULCE" = "AGUA",
+                      "Agua de Inyección"   = "AGUA",
+                      "Agua de formación" = "AGUA",
+                      "Agua de formacion" = "AGUA",
+                      "Agua de Formacion" = "AGUA",
+                      "Agua de Formación" = "AGUA",
+                      "AGUA DE FORMACIÓN" = "AGUA",
+                      "AGUA DE FORMACION" = "AGUA",
+                      "AGUA Y CONDENSADOS" = "AGUA",
+                      "Agua de producción" = "AGUA",
+                      "AGUA HIDROCARBURADA" = "AGUA",
+                      "Agua hidrocarburada" = "AGUA",
+                      "Agua Hidrocarburada" = "AGUA",
+                      "Agua Hidrocarburada." = "AGUA",
+                      "AGUA CON HIDROCARBURO" = "AGUA",
+                      "Almacenado: Agua de producción" = "AGUA",
+                      "AGUA TRATADA" = "AGUA",
+                      "Agua de formación" = "AGUA",
+                      "Aguas Agrias" = "AGUA",
+                      
+                      "PETROLEO TRATADO" = "PETROLEO",
+                      "Petroleo" = "PETROLEO",
+                      "Petróleo" = "PETROLEO",
+                      "Pétroleo" = "PETROLEO",
+                      "PETRÓLEO" = "PETROLEO",
+                      "PETROLEO\r\r\nPETRÓLEO" = "PETROLEO",
+                      "Crudo en especificación" = "PETROLEO",
+                      "CRUDO EN PROCESO" = "PETROLEO",
+                      "CRUDO" = "PETROLEO",
+                      "Crudo" = "PETROLEO",
+                      "CRUDO DE PETROLEO" = "PETROLEO",
+                      "PETROLEO CRUDO" = "PETROLEO",
+                      "PETRÓLEO CRUDO" = "PETROLEO",
+                      "Petróleo crudo" = "PETROLEO",
+                      "Petróleo crudo" = "PETROLEO",
+                      "Almacenamiento de Crudo en especificación"= "PETROLEO",
+                      
+                      "PETRÓLEO/AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO/AGUA" = "PETROLEO + AGUA",
+                      "Petroleo/Agua" = "PETROLEO + AGUA",
+                      "Petróleo + Agua" = "PETROLEO + AGUA",
+                      "Petroleo + Agua" = "PETROLEO + AGUA",
+                      "AGUA Y PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA Y PETRÓLEO" = "PETROLEO + AGUA",
+                      "Agua + Petroleo" = "PETROLEO + AGUA",
+                      "Agua + Petróleo" = "PETROLEO + AGUA",
+                      "AGUA + PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA + PETRÓLEO" = "PETROLEO + AGUA",
+                      "HIDROCARBURO Y AGUA DE FORMACION" = "PETROLEO + AGUA",
+                      "Agua/crudo" = "PETROLEO + AGUA",
+                      "Agua/Petroleo" = "PETROLEO + AGUA",
+                      "PETROLEO y AGUA" = "PETROLEO + AGUA",
+                      "Petróleo Hidratado" = "PETROLEO + AGUA",
+                      "petróleo y agua" = "PETROLEO + AGUA",
+                      "Petróleo y agua" = "PETROLEO + AGUA",
+                      "PETROLEO Y AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO / AGUA FORMACION" = "PETROLEO + AGUA",
+                      "PETROLEO CON AGUA" = "PETROLEO + AGUA",
+                      "CRUDO HIDRATADO" = "PETROLEO + AGUA",
+                      "Crudo Hidratado" = "PETROLEO + AGUA",
+                      "PETROLEO HIDRATADO" = "PETROLEO + AGUA",
+                      "Petróleo / Agua" = "PETROLEO + AGUA",
+                      "AGUA CON PETRÓLEO" = "PETROLEO + AGUA",
+                      "AGUA-PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA+PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA E HIDROCARBUROS" = "PETROLEO + AGUA",
+                      "Agua e Hidrocarburo" = "PETROLEO + AGUA",
+                      "Petróleo y agua)" = "PETROLEO + AGUA",
+                      "Agua y crudo en especificación" = "PETROLEO + AGUA",
+                      "PETROLEO AGUA" = "PETROLEO + AGUA",
+                      "Agua de producción y crudo" = "PETROLEO + AGUA",
+                      "PETROLEO-AGUA" = "PETROLEO + AGUA",
+                      "PETR+AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO + AGUA." = "PETROLEO + AGUA",
+                      "PETROLEO+AGUA" = "PETROLEO + AGUA",
+                      "Agua + Petróleo." = "PETROLEO + AGUA",
+                      
+                      "GASOLINA"  = "GAS OIL",
+                      "BIODIESEL"  = "GAS OIL",
+                      "DIESEL MARINO"  = "GAS OIL",
+                      "Gas oil"  = "GAS OIL",
+                      "Gas Oil"  = "GAS OIL",
+                      "GAS OIL"  = "GAS OIL",
+                      "Gasoil"  = "GAS OIL",
+                      "Infinia Diesel"  = "GAS OIL",
+                      "Gasolina Estabilizada."  = "GAS OIL",
+                      "FUEL OIL"  = "GAS OIL",
+                      "Fuel Oil"  = "GAS OIL",
+                      "Fuel oil"  = "GAS OIL",
+                      "GAS OIL Liviano de Cracking Catalítico"  = "GAS OIL",
+                      "Intermedio Gas Oil"  = "GAS OIL",
+                      
+                      "Nafta"  = "NAFTA",
+                      "Nafta Hidrotratada Liviana" = "NAFTA",
+                      "NAFTA VIRGEN"  = "NAFTA",
+                      "Nafta Virgen"  = "NAFTA",
+                      "Nafta Super"  = "NAFTA",
+                      "Nafta Súper"  = "NAFTA",
+                      "NAFTA ULTRA"  = "NAFTA",
+                      "Nafta Catalítica"  = "NAFTA",
+                      "NAFTAS"  = "NAFTA",
+                      "NAFTA LIGERA CREQUEADA"  = "NAFTA",
+                      "NAFTA COMÚN"  = "NAFTA",
+                      "NAFTA LIVIANA" = "NAFTA",
+                      
+                      "Parafina" = "PARAFINA",
+                      "Solvente Parafínico Hidrogenado" = "PARAFINA",
+                      "PARAFINA HIDROGENADA" = "PARAFINA",
+                      "N-PARAFINA" = "PARAFINA",
+                      
+                      "Base Lubricante" = "BASE LUBRICANTES",
+                      "Base lubricante" = "BASE LUBRICANTES", 
+                      "Corte Lubricante" = "BASE LUBRICANTES",
+                      "BASE LUBRICANTE" = "BASE LUBRICANTES",
+                      
+                      "ISOHEXANO" = "LIVIANOS",
+                      "MTBE" = "LIVIANOS",
+                      "BENCENO" = "LIVIANOS",
+                      "ESTIRENO" = "LIVIANOS",
+                      "Metanol" = "LIVIANOS",
+                      "METANOL" = "LIVIANOS",
+                      "Aguarrás" = "LIVIANOS",
+                      "Alkilado" = "LIVIANOS",
+                      
+                      "INTERMEDIO" = "INTERMEDIOS",
+                      "JP1" = "INTERMEDIOS",
+                      "Kerosene" = "INTERMEDIOS",
+                      "CONDENSADO" = "INTERMEDIOS",
+                      "REFORMADO" = "INTERMEDIOS",
+                      "Reformado Liviano" = "INTERMEDIOS",
+                      "CORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+                      "CORTE AROMATICO LIVIANO\r\r\nAROMÁTICO\r\r\nCORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+                      
+                      "Extracto Aromático" = "PESADOS",
+                      "EXTRACTO" = "PESADOS",
+                      "EXTENSOR" = "PESADOS",
+                      "Destilado Corte 20" = "PESADOS",
+                      "Slop de Coque" = "PESADOS",
+                      "SLOP" = "PESADOS",
+                      "Slop" = "PESADOS",
+                      "Slurry" = "PESADOS",
+                      "LFO 380" = "PESADOS",
+                      "BISOLVENTE" = "PESADOS",
+                      
+                      "EN TRAMITE" = "OTROS",
+                      "LAB FINAL." = "OTROS",
+                      "Corte 20364" = "OTROS",
+                      "Componente petroquímico." = "OTROS",
+                      "DRIPOLENE" = "OTROS",
+                      "Refinado" = "OTROS",
+                      "REFINADO" = "OTROS",
+                      "Otros (aclarar cuál)\r\r\nSi selecciona Otro aclarar :\r\r\nINTERMEDIOS" = "OTROS"
+                      )
+    ) |> 
+# Hay un valor "NA" que convertimos a NA
+  mutate(
+    producto = na_if(producto, "NA")
+  )
+
+# Se convierte la variable producto de tipo character a factor
+tanques <- tanques |> 
+  mutate(
+    producto = as.factor(producto)
+  )
+```
+
+Finalmente podemos ver el ranking de productos almacenados:
+
+```{r}
+# Quedaron 11 valores unicos
+tanques |> 
+  count(producto, sort = TRUE)
+```
+
+También se debe corregir la variable `empresa` ya que por falta de
+criterios de estandarización en la toma de datos tiene muchos valores
+diferentes para indicar lo mismo, por ejemplo, se observa "YPF S.A."
+pero también "Y.P.F S.A".
+
+```{r results='hide'}
+#| message: false
+#| warning: false
+#| include: false
+# Hay 69 valores unicos en la variable empresa
+sort(unique(tanques$empresa))
+
+# Al ver los nombres de las empresas ordenadas alfabeticamente se destaca que todas difieren en las 3 primeras letras por lo que se estandaríza en esa cantidad, salvo "Central Process Facility Bandurria centro" por lo que se transforma previamente.
+
+tanques <- tanques |> 
+  # se reemplaza la que se puede confundir
+  mutate(
+    empresa = ifelse(empresa == "Central Process Facility Bandurria centro", "CPF",empresa)
+  ) |> 
+  # se procesa masivamente todos los valores
+  mutate(
+    empresa = empresa |> 
+      str_to_lower() |>                           # 1) pasar a minúsculas
+      str_replace_all("[[:space:].]", "") |>      # 2) eliminar espacios y puntos
+      str_sub(1, 3)                               # 3) tomar las primeras letras 
+  ) 
+
+# Se obtuvieron 21 valores diferentes. 
+unique(tanques$empresa)
+
+# Para simplificar la lectura se reemplazan las 3 letras por el nombre de la empresa
+
+tanques <- tanques |> 
+  mutate(
+    empresa = recode(empresa,
+                     "ter" = "T GB",
+                     "fsa" = "F SA",
+                     "ypf" = "YPF",
+                     "plu" = "PLUSPETROL",
+                     "vis" = "VISTA",
+                     "vil" = "VILUCO",
+                     "geo" = "GEOPARK",
+                     "tra" = "TGS",
+                     "cen" = "CENTRALES DCA",
+                     "cil" = "CILP",
+                     "pet" = "PETROBRAS",
+                     "ena" = "ENAP",
+                     "ope" = "PELSA",
+                     "pan" = "PAN AMERICAN",
+                     "oil" = "OILSTONE",
+                     "tec" = "TECPETROL",
+                     "ref" = "REFINORTE",
+                     "exx" = "EXXON",
+                     "cap" = "CAPEX",
+                     "old" = "OLDELVAL",
+                     "cpf" = "CPF BC",
+    )
+  )
+
+# Se convierte la variable empresa de tipo character a factor
+tanques <- tanques |> 
+  mutate(
+    empresa = as.factor(empresa)
+  )
+```
+
+Finalmente podemos ver el ranking de cantidad de tanques por empresa:
+
+```{r}
+# El ranking de tanques por empresa
+tanques |> 
+  count(empresa, sort = TRUE)
 ```
 
 A las variables `lat` y `long` hay que procesarlas para poder trabajar
@@ -452,7 +738,18 @@ Se muestra como quedó la base de datos:
 head(tanques)
 ```
 
-## **3-Datos Georreferenciados**
+Finalmente se revisa que los tipos de datos hayan quedado como se desea:
+
+```{r}
+tipos_datos <- tibble(
+  variable = names(tanques),
+  tipo = sapply(tanques, class)
+)
+
+tipos_datos
+```
+
+## **3 - DATOS GEORREFERENCIADOS**
 
 ```{r}
 
