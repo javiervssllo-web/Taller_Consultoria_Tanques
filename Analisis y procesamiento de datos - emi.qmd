@@ -134,7 +134,7 @@ H/D como predictor de modos de falla. Tanques esbeltos H/D \> 0,7 son
 tanques mucho más vulnerables a grandes esfuerzos de compresión en la
 base, generando pandeo “pata de elefante” (Figura 6‑4).
 
-![](images/clipboard-3566246108.png)
+![](images/clipboard-3566246108.png){fig-align="center"}
 
 *Figura 6‑4: Pandeo “pata de elefante” de la pared. Alaska-1964. (Juan
 Carlos Herrera, 2007)*
@@ -184,7 +184,7 @@ informe interno para tener trazabilidad de la información extraída.
 
 ### Virolas
 
-CANTIDAD DE VIROLAS/ESPESOR PRIMER VIROLA
+ESPESOR PRIMER VIROLA (`e_espesor1er_virola`)
 
 El espesor influye en la resistencia del tanque frente a la acción
 externa sobre su superficie. A partir del espesor de la primera virola,
@@ -195,6 +195,8 @@ relacionando esto con la edad del tanque, es posible analizar la perdida
 de integridad del tanque. Por otro lado, también es la que recibe mayor
 carga vertical y esto para tanques esbeltos H/D \> 0.7, según Herrera
 (2007), produce mayor riesgo de pandeo.
+
+CANTIDAD DE VIROLAS (`e_virolas`)
 
 Conocer la cantidad de virolas, ayuda a comprender la capacidad de
 almacenamiento, estabilidad estructural, además facilita la inspección y
@@ -223,9 +225,9 @@ infraestructura circundante. Por otro lado, frente a la acción del
 viento, es posible estudiar el efecto que tienen estas estructuras en
 como pantallas frente a la superficie de un tanque.
 
-|                                      |                                      |
-|------------------------------------|------------------------------------|
-| ![](images/clipboard-2423102979.png) | ![](images/clipboard-3950683073.png) |
+|  |  |
+|-------------------------------|----------------------------------|
+| ![](images/clipboard-2423102979.png){width="271"} | ![](images/clipboard-3950683073.png){width="312"} |
 
 *Figura 6‑6a: A la izquierda, lay out en imagen satelital. A la derecha,
 imagen de interior del recinto de contención*
@@ -732,7 +734,8 @@ A las variables `lat` y `long` hay que procesarlas para poder trabajar
 con ellas. Eso se realiza en el punto 3 del informe (Datos
 Georreferenciados).
 
-Se muestra como quedó la base de datos:
+Se muestra como quedó la base de datos con las 16 variables
+seleccionadas:
 
 ```{r}
 head(tanques)
@@ -748,6 +751,258 @@ tipos_datos <- tibble(
 
 tipos_datos
 ```
+
+### Correlación
+
+**ANÁLISIS DE CORRELACIÓN**
+
+Se procede inspeccionar la dispersión de las variables *cuantitativas*
+para ver su colinealidad.
+
+```{r}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+library(psych)
+
+pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virolas","e_espesor1er_virola")], # variables
+             method = "pearson", # tipo de correlación
+             labels = c("año","volumen","altura","diametro","espesor 1er virola","cant. virolas"),
+             hist.col = "blue",
+             main = "Matriz de dispersión con correlaciones")
+```
+
+Se observa que no hay correlaciones fuertes entre las variables, siendo
+la máxima de 0.71 entre el volumen y la cantidad de virolas de los
+tanques, lo cual concuerda con las características constructivas
+esperadas.
+
+### Outliers
+
+En la matriz de dispersión se observaron variables con posibles
+outliers, por lo que se analizan cada una puntualmente.
+
+**AÑO MONTAJE** (`ano_montaje`)
+
+```{r}
+#| message: false
+#| warning: false
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$ano_montaje, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$ano_montaje, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(ano_montaje > umbral_sup | ano_montaje < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=ano_montaje))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = ano_montaje),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+
+
+```
+
+Se detectan dos valores atípicos, un registro del año 212 y uno de 1921.
+Buscamos los registros.
+
+```{r}
+tanques |> 
+  filter(ano_montaje %in% c(212, 1921))
+```
+
+Los dos se encuentran en funcionamiento. Corregimos el typo de "212" por
+"2012":
+
+```{r}
+
+tanques <- tanques |> 
+  mutate(ano_montaje = if_else(ano_montaje == 212, 2012, ano_montaje))
+```
+
+**DIAMETRO** (`e_diametro`)
+
+La variable diametro también muestra un posible outlier.
+
+```{r}
+#| message: false
+#| warning: false
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$e_diametro, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$e_diametro, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(e_diametro > umbral_sup | e_diametro < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=e_diametro))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = e_diametro),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+
+Se observa un outlier superior muy alto (1828) y algunos por debajo de
+los valores de interés. Calculamos el diametro geometricamente mediante:
+
+$$V = \pi \left(\frac{diametro}{2}\right)^2 altura$$
+
+y observamos los registros comparados con ese valor para un mejor
+análisis.
+
+```{r}
+outliers |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura),2) |> 
+  select(id, volumen_mat, volumen,e_altura,e_diametro)
+```
+
+Se observa que hay 5 registros cuyo volumen esperado según el cálculo
+matemático es correcto por lo que se mantienen en el registro sin
+cambios. Solo un registro (id = 246) es inconsistente y se debe a un
+typo en el diametro (no existen tanques de 1828m de diametro) pero si se
+corrige a 18.28 el nuevo valor de volumen calculado matematicamente
+(3202) sigue siendo muy diferente al registrado (29651).
+
+Debido a que no se puede identificar correctamente el error pero se sabe
+con certeza su existencia, se procede a eliminar el registro con id=246.
+
+```{r}
+tanques <- tanques |> 
+  filter(id != 246)
+```
+
+**ALTURA** (`e_altura`)
+
+La variable altura también muestra un posible outlier. Lo buscamos:
+
+```{r}
+#| message: false
+#| warning: false
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$e_altura, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$e_altura, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(e_altura > umbral_sup | e_altura < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=e_altura))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = e_altura),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+
+Se observan 2 outliers superiore a analizar. Ambos son a priori typos
+porque no son valores de construcción reales, son muy elevados. Vemos
+los registros (calculando el volumen matemáticamente) para analizar con
+mayor detalle:
+
+```{r}
+outliers |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura),2) |> 
+  select(id, volumen_mat, volumen,e_altura,e_diametro)
+
+```
+
+El de 87.6m de altura (id = 180) tiene casi todos los datos faltantes,
+por lo que no se puede validar si es un typo pero se sabe que
+fisicamente no es posible esa construcción por lo que se elimina. El de
+36.6m (id = 323) podría pensarse inicialmente como un typo pero el
+calculo de volumen muestra que también allí hay error, por lo que al no
+poder corregirlo también se elimina.
+
+```{r}
+tanques <- tanques |> 
+  filter(!id %in% c(180,323))
+```
+
+### Colinealidad
+
+**ANALISIS DE CORRELACIÓN**
+
+Una vez eliminados los outliers volvemos a revisar la correlación y la
+inflación de la varianza (VIF) para ver si hay colinealidad entre las
+variables numéricas.
+
+```{r}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+
+library(psych)
+
+pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virolas","e_espesor1er_virola")], # variables
+             method = "pearson", # tipo de correlación
+             labels = c("año","volumen","altura","diametro","espesor 1er virola","cant. virolas"),
+             hist.col = "blue",
+             main = "Matriz de dispersión con correlaciones")
+```
+
+Vemos que aumentaron las correlaciones, ahora si el volumen y el
+diametro están fuertemente correlacionados (0.91), también lo estan el
+diametro con la cantidad de virolas (0.83) y el volumen con la cantidad
+de virolas (0.74), todo lo cual tiene mucho sentido desde la física del
+problema.
+
+**FACTOR DE INFLACIÓN DE LA VARIANZA (VIF)**
+
+La variable `volumen` es la que mayores correlaciones presenta.
+Calculamos el factor de inflación respecto al resto de variables
+numéricas.
+
+El VIF se calcula de la siguiente manera:
+
+$$ VIF_j=\frac{1}{1-𝑅_𝑗^2} $$
+
+donde $𝑅_𝑗^2$ es el coeficiente de determinación de la regresión de la
+variable $𝑋_𝑗$ contra todas las demás. Valores mayores a 5 o 10 suelen
+considerarse problemáticos.
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#Calculo de VIF para cada variable explicativa con 
+library(car)
+
+vars <- c("ano_montaje","volumen","e_altura","e_diametro","e_virolas","e_espesor1er_virola")
+vif_pair <- sapply(vars, function(v){
+  r <- cor(tanques$volumen, tanques[[v]], use = "complete.obs")
+  1 / (1 - r^2)
+})
+
+# Se convierte a tibble y se ordena para mostrar correctamente
+VIF <- data.frame(
+  VIF = print(round(vif_pair,3), digits = 4)
+) %>%
+  arrange(desc(VIF))
+
+VIF
+```
+
+Los valores son bajos (todos menores a 2.5) salvo con la variable
+`e_diametro`, pero igualmente se mantiene apenas por encima del umbral
+de 5 por lo que se considera una baja colinealidad.
 
 ## **3 - DATOS GEORREFERENCIADOS**
 
