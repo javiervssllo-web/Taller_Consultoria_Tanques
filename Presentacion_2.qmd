@@ -1,0 +1,926 @@
+---
+title: "Daños y vulnerabilidad de estructuras laminares"
+subtitle: "Taller de Entrenamiento en Consultoría estadística"
+author: "Matias Nestasio - Emiliano Estrada - Javier Vassallo"
+date: today
+date-format: "DD/MM/YYYY"
+lang: es
+format:
+  revealjs:
+    theme: serif
+    slide-number: true
+    incremental: false
+    footer: "Seminario 2 – Consultoría estadística"
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+library(tidyverse)
+# library(tidymodels)
+```
+
+# Contexto
+
+## Problema planteado por el investigador
+
+- Pregunta de investigación:
+
+  *¿*Cómo pueden caracterizarse los tanques incluidos en la base de datos desde el punto de vista de dimensiones, tipos de techo, ubicación, fluido?
+
+  ¿Es posible obtener alguna caracterización de los riegos mas frecuentes?
+
+- Objetivo de la consultoría:
+
+  "*Clasificación y Caracterización"*
+
+## Datos proporcionados por el investigador
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, results='hide'}
+library(tidyverse)
+library(readxl)
+library(janitor)
+library(skimr)
+library(naniar)
+library(lubridate)
+
+# Lectura del xml
+tanques <- read_excel("Datos/Datos_Tanques.xlsx") %>%
+  clean_names()
+
+```
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, output=TRUE}
+library(gt)
+tanques |>
+  head(6) |>
+  gt() |>
+  tab_options(
+    container.overflow.x = TRUE,   # scroll horizontal
+    container.width = pct(100),
+    table.font.size = px(12)
+  )
+```
+
+## Variables del estudio
+
+::::: columns
+::: {.column width="50%" style="font-size: 0.6em;"}
+- Identificación:
+  - ID (número de reporte de tanque); OAT (Número de informe); Año de informe
+- Ubicación:
+  - Latitud y Longitud
+- Estado:
+  - En servicio - Fuera de servicio
+- Producto: producto que almacena
+- Prop. Físicas:
+  - Volumen; Altura; Diámetro; Espesor
+- Año de Montaje
+- Empresa
+:::
+
+::: {.column width="50%" style="font-size: 0.6em;"}
+- Nomenclatura
+- Virolas:
+  - Cantidad de Virolas; Espesor primera Virola
+- Resultado del informe
+- Diques de Contención:
+  - DC-Individual/Compartido/Dimensiones
+- Tipo de Techo
+- Corrosión y Asentamientos:
+  - Medición de corroción/Medición de asentamiento
+- Comentarios y Adjuntos
+:::
+:::::
+
+## Plan de trabajo general
+
+1.  Análisis exploratorio y limpieza de datos.
+2.  Incorporación de variables que forman parte del proyecto pero no fueron proporcionadas.
+3.  Modelo de clasificación con las variables proporcionadas.
+4.  Segundo modelo de clasificación con variables incorporadas.
+5.  Comparación de modelos y respuesta al investigador.
+
+# 1. Actividades finalizadas: análisis exploratorio y limpieza
+
+## Objetivo
+
+- Conocer la estructura y calidad de los datos proporcionados
+- Detectar valores faltantes, atípicos e inconsistencias
+- Dejar una base depurada lista para modelar
+
+## Metodología
+
+- Revisión de estructura y tipos de variables.
+- Análisis de datos faltantes y criterio de tratamiento.
+- Detección de outliers y errores de carga.
+- Análisis de influencia.
+- Análisis de correlación y colinealidad.
+- Criterios de limpieza y decisiones tomadas.
+
+## Primera intervención
+
+Limpieza general, recuento de valores faltantes, estandarización de categorías, etc.
+
+```{r}
+#| eval: true
+#| output: false
+# se eliminan las variables a no utilizar luego del analisis de datos faltantes
+tanques <- tanques |> select(!(c(dc_compartido, 
+                                 comentarios,
+                                 dc_dimensiones,
+                                 dc_individual)))
+
+# se eliminan las variables cualitativas a no utilizar
+tanques <- tanques |> select(!(c(oat,
+                                 cit,
+                                 taah,
+                                 ubicacion,
+                                 archivo_doc,
+                                 adjuntos,
+                                 tipoinforme)))
+
+# variables tipo character a factores
+tanques <- tanques %>%
+  mutate(
+    estado = as.factor(estado),
+    tipo_de_techo = as.factor(tipo_de_techo),
+    resultado_informe = as.factor(resultado_informe)
+  )
+
+# variables tipo character a tipo lógicas
+tanques <- tanques |> 
+  mutate(
+    medicion_de_asent_dif = case_when(
+      medicion_de_asent_dif == "SI" ~ TRUE,
+      medicion_de_asent_dif == "NO" ~ FALSE,
+      is.na(medicion_de_asent_dif) ~ NA
+    ),
+    medicion_de_corrosion = case_when(
+      medicion_de_corrosion == "SI" ~ TRUE,
+      medicion_de_corrosion == "NO" ~ FALSE,
+      is.na(medicion_de_corrosion) ~ NA
+    )
+  )
+
+
+# Hay que hacer una tabla de equivalencias para estandarizar nombres y agrupar
+tanques <- tanques |> 
+  mutate(
+    producto = recode(producto,
+                      "Agua" = "AGUA",
+                      "AGUA DULCE" = "AGUA",
+                      "Agua de Inyección"   = "AGUA",
+                      "Agua de formación" = "AGUA",
+                      "Agua de formacion" = "AGUA",
+                      "Agua de Formacion" = "AGUA",
+                      "Agua de Formación" = "AGUA",
+                      "AGUA DE FORMACIÓN" = "AGUA",
+                      "AGUA DE FORMACION" = "AGUA",
+                      "AGUA Y CONDENSADOS" = "AGUA",
+                      "Agua de producción" = "AGUA",
+                      "AGUA HIDROCARBURADA" = "AGUA",
+                      "Agua hidrocarburada" = "AGUA",
+                      "Agua Hidrocarburada" = "AGUA",
+                      "Agua Hidrocarburada." = "AGUA",
+                      "AGUA CON HIDROCARBURO" = "AGUA",
+                      "Almacenado: Agua de producción" = "AGUA",
+                      "AGUA TRATADA" = "AGUA",
+                      "Agua de formación" = "AGUA",
+                      "Aguas Agrias" = "AGUA",
+                      
+                      "PETROLEO TRATADO" = "PETROLEO",
+                      "Petroleo" = "PETROLEO",
+                      "Petróleo" = "PETROLEO",
+                      "Pétroleo" = "PETROLEO",
+                      "PETRÓLEO" = "PETROLEO",
+                      "PETROLEO\r\r\nPETRÓLEO" = "PETROLEO",
+                      "Crudo en especificación" = "PETROLEO",
+                      "CRUDO EN PROCESO" = "PETROLEO",
+                      "CRUDO" = "PETROLEO",
+                      "Crudo" = "PETROLEO",
+                      "CRUDO DE PETROLEO" = "PETROLEO",
+                      "PETROLEO CRUDO" = "PETROLEO",
+                      "PETRÓLEO CRUDO" = "PETROLEO",
+                      "Petróleo crudo" = "PETROLEO",
+                      "Petróleo crudo" = "PETROLEO",
+                      "Almacenamiento de Crudo en especificación"= "PETROLEO",
+                      
+                      "PETRÓLEO/AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO/AGUA" = "PETROLEO + AGUA",
+                      "Petroleo/Agua" = "PETROLEO + AGUA",
+                      "Petróleo + Agua" = "PETROLEO + AGUA",
+                      "Petroleo + Agua" = "PETROLEO + AGUA",
+                      "AGUA Y PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA Y PETRÓLEO" = "PETROLEO + AGUA",
+                      "Agua + Petroleo" = "PETROLEO + AGUA",
+                      "Agua + Petróleo" = "PETROLEO + AGUA",
+                      "AGUA + PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA + PETRÓLEO" = "PETROLEO + AGUA",
+                      "HIDROCARBURO Y AGUA DE FORMACION" = "PETROLEO + AGUA",
+                      "Agua/crudo" = "PETROLEO + AGUA",
+                      "Agua/Petroleo" = "PETROLEO + AGUA",
+                      "PETROLEO y AGUA" = "PETROLEO + AGUA",
+                      "Petróleo Hidratado" = "PETROLEO + AGUA",
+                      "petróleo y agua" = "PETROLEO + AGUA",
+                      "Petróleo y agua" = "PETROLEO + AGUA",
+                      "PETROLEO Y AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO / AGUA FORMACION" = "PETROLEO + AGUA",
+                      "PETROLEO CON AGUA" = "PETROLEO + AGUA",
+                      "CRUDO HIDRATADO" = "PETROLEO + AGUA",
+                      "Crudo Hidratado" = "PETROLEO + AGUA",
+                      "PETROLEO HIDRATADO" = "PETROLEO + AGUA",
+                      "Petróleo / Agua" = "PETROLEO + AGUA",
+                      "AGUA CON PETRÓLEO" = "PETROLEO + AGUA",
+                      "AGUA-PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA+PETROLEO" = "PETROLEO + AGUA",
+                      "AGUA E HIDROCARBUROS" = "PETROLEO + AGUA",
+                      "Agua e Hidrocarburo" = "PETROLEO + AGUA",
+                      "Petróleo y agua)" = "PETROLEO + AGUA",
+                      "Agua y crudo en especificación" = "PETROLEO + AGUA",
+                      "PETROLEO AGUA" = "PETROLEO + AGUA",
+                      "Agua de producción y crudo" = "PETROLEO + AGUA",
+                      "PETROLEO-AGUA" = "PETROLEO + AGUA",
+                      "PETR+AGUA" = "PETROLEO + AGUA",
+                      "PETROLEO + AGUA." = "PETROLEO + AGUA",
+                      "PETROLEO+AGUA" = "PETROLEO + AGUA",
+                      "Agua + Petróleo." = "PETROLEO + AGUA",
+                      
+                      "GASOLINA"  = "GAS OIL",
+                      "BIODIESEL"  = "GAS OIL",
+                      "DIESEL MARINO"  = "GAS OIL",
+                      "Gas oil"  = "GAS OIL",
+                      "Gas Oil"  = "GAS OIL",
+                      "GAS OIL"  = "GAS OIL",
+                      "Gasoil"  = "GAS OIL",
+                      "Infinia Diesel"  = "GAS OIL",
+                      "Gasolina Estabilizada."  = "GAS OIL",
+                      "FUEL OIL"  = "GAS OIL",
+                      "Fuel Oil"  = "GAS OIL",
+                      "Fuel oil"  = "GAS OIL",
+                      "GAS OIL Liviano de Cracking Catalítico"  = "GAS OIL",
+                      "Intermedio Gas Oil"  = "GAS OIL",
+                      
+                      "Nafta"  = "NAFTA",
+                      "Nafta Hidrotratada Liviana" = "NAFTA",
+                      "NAFTA VIRGEN"  = "NAFTA",
+                      "Nafta Virgen"  = "NAFTA",
+                      "Nafta Super"  = "NAFTA",
+                      "Nafta Súper"  = "NAFTA",
+                      "NAFTA ULTRA"  = "NAFTA",
+                      "Nafta Catalítica"  = "NAFTA",
+                      "NAFTAS"  = "NAFTA",
+                      "NAFTA LIGERA CREQUEADA"  = "NAFTA",
+                      "NAFTA COMÚN"  = "NAFTA",
+                      "NAFTA LIVIANA" = "NAFTA",
+                      
+                      "Parafina" = "PARAFINA",
+                      "Solvente Parafínico Hidrogenado" = "PARAFINA",
+                      "PARAFINA HIDROGENADA" = "PARAFINA",
+                      "N-PARAFINA" = "PARAFINA",
+                      
+                      "Base Lubricante" = "BASE LUBRICANTES",
+                      "Base lubricante" = "BASE LUBRICANTES", 
+                      "Corte Lubricante" = "BASE LUBRICANTES",
+                      "BASE LUBRICANTE" = "BASE LUBRICANTES",
+                      
+                      "ISOHEXANO" = "LIVIANOS",
+                      "MTBE" = "LIVIANOS",
+                      "BENCENO" = "LIVIANOS",
+                      "ESTIRENO" = "LIVIANOS",
+                      "Metanol" = "LIVIANOS",
+                      "METANOL" = "LIVIANOS",
+                      "Aguarrás" = "LIVIANOS",
+                      "Alkilado" = "LIVIANOS",
+                      
+                      "INTERMEDIO" = "INTERMEDIOS",
+                      "JP1" = "INTERMEDIOS",
+                      "Kerosene" = "INTERMEDIOS",
+                      "CONDENSADO" = "INTERMEDIOS",
+                      "REFORMADO" = "INTERMEDIOS",
+                      "Reformado Liviano" = "INTERMEDIOS",
+                      "CORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+                      "CORTE AROMATICO LIVIANO\r\r\nAROMÁTICO\r\r\nCORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+                      
+                      "Extracto Aromático" = "PESADOS",
+                      "EXTRACTO" = "PESADOS",
+                      "EXTENSOR" = "PESADOS",
+                      "Destilado Corte 20" = "PESADOS",
+                      "Slop de Coque" = "PESADOS",
+                      "SLOP" = "PESADOS",
+                      "Slop" = "PESADOS",
+                      "Slurry" = "PESADOS",
+                      "LFO 380" = "PESADOS",
+                      "BISOLVENTE" = "PESADOS",
+                      
+                      "EN TRAMITE" = "OTROS",
+                      "LAB FINAL." = "OTROS",
+                      "Corte 20364" = "OTROS",
+                      "Componente petroquímico." = "OTROS",
+                      "DRIPOLENE" = "OTROS",
+                      "Refinado" = "OTROS",
+                      "REFINADO" = "OTROS",
+                      "Otros (aclarar cuál)\r\r\nSi selecciona Otro aclarar :\r\r\nINTERMEDIOS" = "OTROS"
+    )
+  ) |> 
+  # Hay un valor "NA" que convertimos a NA
+  mutate(
+    producto = na_if(producto, "NA")
+  )
+
+# Se convierte la variable producto de tipo character a factor
+tanques <- tanques |> 
+  mutate(
+    producto = as.factor(producto)
+  )
+
+tanques <- tanques |> 
+  # se reemplaza la que se puede confundir
+  mutate(
+    empresa = ifelse(empresa == "Central Process Facility Bandurria centro", "CPF",empresa)
+  ) |> 
+  # se procesa masivamente todos los valores
+  mutate(
+    empresa = empresa |> 
+      str_to_lower() |>                           # 1) pasar a minúsculas
+      str_replace_all("[[:space:].]", "") |>      # 2) eliminar espacios y puntos
+      str_sub(1, 3)                               # 3) tomar las primeras letras 
+  ) 
+
+# Se obtuvieron 21 valores diferentes. 
+unique(tanques$empresa)
+
+# Para simplificar la lectura se reemplazan las 3 letras por el nombre de la empresa
+
+tanques <- tanques |> 
+  mutate(
+    empresa = recode(empresa,
+                     "ter" = "T GB",
+                     "fsa" = "F SA",
+                     "ypf" = "YPF",
+                     "plu" = "PLUSPETROL",
+                     "vis" = "VISTA",
+                     "vil" = "VILUCO",
+                     "geo" = "GEOPARK",
+                     "tra" = "TGS",
+                     "cen" = "CENTRALES DCA",
+                     "cil" = "CILP",
+                     "pet" = "PETROBRAS",
+                     "ena" = "ENAP",
+                     "ope" = "PELSA",
+                     "pan" = "PAN AMERICAN",
+                     "oil" = "OILSTONE",
+                     "tec" = "TECPETROL",
+                     "ref" = "REFINORTE",
+                     "exx" = "EXXON",
+                     "cap" = "CAPEX",
+                     "old" = "OLDELVAL",
+                     "cpf" = "CPF BC",
+    )
+  )
+
+# Se convierte la variable empresa de tipo character a factor
+tanques <- tanques |> 
+  mutate(
+    empresa = as.factor(empresa)
+  )
+
+
+```
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, output=TRUE}
+
+tanques |>
+  head(6) |>
+  gt() |>
+  tab_options(
+    container.overflow.x = TRUE,   # scroll horizontal
+    container.width = pct(100),
+    table.font.size = px(12)
+  )
+
+```
+
+## Segunda intervención: Outliers
+
+::::: columns
+::: {.column width="50%" style="font-size: 0.5em;"}
+Año de Montaje
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| output: TRUE
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$ano_montaje, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$ano_montaje, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(ano_montaje > umbral_sup | ano_montaje < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=ano_montaje))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = ano_montaje),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+
+```
+
+Diámetro
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| output: TRUE
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$e_diametro, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$e_diametro, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(e_diametro > umbral_sup | e_diametro < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=e_diametro))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = e_diametro),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+:::
+
+::: {.column width="50%" style="font-size: 0.5em;"}
+Altura
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| output: TRUE
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$e_altura, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$e_altura, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(e_altura > umbral_sup | e_altura < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=e_altura))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = e_altura),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+
+Volumen
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| output: TRUE
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$volumen, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$volumen, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(volumen > umbral_sup | volumen < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=volumen))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = volumen),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+
+```
+:::
+:::::
+
+## Analisis de Correlación
+
+::::: columns
+::: {.column width="50%" style="font-size: 0.8em;"}
+Previo al análisis de outliers
+
+```{r}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| output: TRUE
+
+library(psych)
+
+pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virolas","e_espesor1er_virola")], # variables
+             method = "pearson", # tipo de correlación
+             labels = c("año","volumen","altura","diametro","espesor 1er virola","cant. virolas"),
+             hist.col = "blue",
+             main = "Matriz de dispersión con correlaciones")
+```
+:::
+
+::: {.column width="50%" style="font-size: 0.8em;"}
+Posterior al análisis de outliers
+
+```{r}
+#| echo: false
+#| error: false
+#| message: false
+#| warning: false
+#| output: TRUE 
+
+#quitamos outliers
+tanques <- tanques |> 
+  mutate(ano_montaje = if_else(ano_montaje == 212, 2012, ano_montaje))
+tanques <- tanques |> 
+  filter(id != "246")
+tanques <- tanques |> 
+  filter(!id %in% c("180","323"))
+tanques <- tanques |> 
+  mutate(volumen = if_else(as.character(id) == "199", 13000, volumen))
+
+
+library(psych)
+
+pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virolas","e_espesor1er_virola")], # variables
+             method = "pearson", # tipo de correlación
+             labels = c("año","volumen","altura","diametro","espesor 1er virola","cant. virolas"),
+             hist.col = "blue",
+             main = "Matriz de dispersión con correlaciones")
+```
+:::
+:::::
+
+## Datos Georreferenciados
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, output=TRUE}
+#Funcion para pasar las coordenadas de Formato "38°57'04''S" a decimales. Todos los tanques se encuentran en Argentina por lo tanto longitud y latitud son siempre negativas en sistema decimal (los datos se cargaron especificando S, O, W ó nada)
+
+library(tidyverse)
+library(stringr)
+
+dms_a_decimal <- function(x, tipo = c("lat", "long")) {
+  tipo <- match.arg(tipo)
+  nums <- str_extract_all(x, "\\d+") %>%
+    map(~ as.numeric(.x))
+  decimal <- map_dbl(nums, ~{
+    .x[1] + .x[2]/60 + .x[3]/3600
+  })
+  
+  # Determinar signo
+  signo <- case_when(
+    str_detect(x, "[Ss]") ~ -1,
+    str_detect(x, "[WwOo]") ~ -1,
+    str_detect(x, "[NnEe]") ~ 1,
+    tipo == "lat" ~ -1,   # si no hay letra asumir Sur
+    tipo == "long" ~ -1,  # si no hay letra asumir Oeste
+    TRUE ~ 1
+  )
+  decimal * signo
+}
+
+#Cambio de coordendas de la base
+tanques <- tanques %>%
+  mutate(
+    lat= dms_a_decimal(lat),
+    long= dms_a_decimal(long)
+  )%>%
+  mutate(
+    lat= as.numeric(lat),
+    long= as.numeric(long)
+  )
+tanques <- tanques %>%
+  filter(
+    !is.na(lat),
+    !is.na(long)
+  )
+
+#Verificación. En patagonia LAT entre -36 y -41, LONG entre -66 y -71
+summary(tanques $lat)
+summary(tanques $long)
+```
+
+```{r, output=FALSE}
+library(sf)
+library(ggspatial)   # barra de escala y norte
+
+tanques<- tanques %>%
+  st_as_sf(
+    coords = c("long", "lat"),
+    crs = 4326, #cambio de coordenadas al sistema de referencia
+    remove = FALSE
+  )
+```
+
+```{r,output= TRUE}
+#Grafico con ggspatial mapa estatico
+library(ggplot2)
+ggplot() +
+  annotation_map_tile(type = "osm") +
+  geom_sf(
+    data = tanques,
+    aes(color = empresa),
+    size = 2
+  ) +
+  annotation_scale(location = "bl") +
+  annotation_north_arrow(location = "tr") +
+  coord_sf()
+```
+
+## Datos Georreferenciados
+
+```{r, ECHO=FALSE, warning=FALSE, message=FALSE, output=TRUE}
+library(leaflet)
+
+pal <- colorFactor(
+  c("green","orange","red"),
+  tanques$estado
+)
+
+leaflet(tanques) %>%
+  addProviderTiles(
+    providers$Esri.WorldImagery
+  ) %>%
+  addCircleMarkers(
+    radius = 5,
+    color = ~pal(estado),
+    stroke = FALSE,
+    fillOpacity = 0.8,
+    popup = ~paste(
+      "<b>ID:</b>", id, "<br>",
+      "<b>Empresa:</b>", empresa, "<br>",
+      "<b>Estado:</b>", estado, "<br>",
+      "<b>Volumen:</b>", volumen
+    )
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~estado,
+    title = "Estado"
+  )
+```
+
+## Riesgo por acción sísmica
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+#| output: false
+#Se carga la capa oficial de zonificacion sísmica SIG del Instituto Geográfico Nacional (IGN). El IGN publica estas capas en formato vectorial y en WGS84 / EPSG:4326 
+# Link: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG
+
+library(sf)
+zonas_cirsoc <- st_read(
+  "Datos/inpres_sismos_zonificacion/inpres_sismos_zonificacionPolygon.shp"
+)
+
+#A veces los shapefiles presentan problemas topológicos  y debe subsanearse previamente para eliminar poligonos que dan errores
+sum(!st_is_valid(zonas_cirsoc))
+which(!st_is_valid(zonas_cirsoc))
+zonas_cirsoc <- st_make_valid(zonas_cirsoc)
+sf_use_s2(FALSE)
+
+#Observamos la data
+glimpse(zonas_cirsoc) #nam contoene el nombre de los departamentos
+names(zonas_cirsoc)
+st_crs(zonas_cirsoc) #Tiene que ser EPSG:4326 para coincidir con tanque_sf
+
+zona_sismica <- zonas_cirsoc |> 
+  select(c(zona_sismo,p_sismica,geometry))|> 
+  rename(riesgo_sismico=p_sismica)
+```
+
+```{r}
+library(sf)
+
+#Asociar cada tanque a una zona sísmica, Como los tanques son puntos y las zonas son polígonos:
+
+tanques<- st_join(
+  tanques,
+  zona_sismica,
+  join = st_intersects,
+  left = TRUE
+)
+```
+
+```{r}
+library(leaflet)
+
+pal <- colorFactor(
+  palette = c(
+    "lightgreen",
+    "green",
+    "orange",
+    "red",
+    "purple"
+  ),
+  domain = tanques$zona_sismo
+)
+
+leaflet(tanques) %>%
+  
+  addProviderTiles(
+    providers$Esri.WorldImagery
+  ) %>%
+  
+  addCircleMarkers(
+    radius = 5,
+    color = ~pal(zona_sismo),
+    stroke = FALSE,
+    fillOpacity = 0.8,
+    
+    popup = ~paste(
+      "<b>ID:</b>", id,
+      "<br><b>Empresa:</b>", empresa,
+      "<br><b>Estado:</b>", estado,
+      "<br><b>Riesgo Sísmico:</b>", riesgo_sismico
+    )
+  ) %>%
+  
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~zona_sismo,
+    title = "Zona Sísmica"
+  )
+```
+
+## Riesgo por vientos
+
+```{r}
+library(tibble)
+library(sf)
+library(dplyr)
+
+#Creamos la tabla Cirsoc 102 para vientos
+viento_cirsoc <- tibble(
+  ciudad = c(
+    "Bahía Blanca", "Bariloche", "Buenos Aires", "Catamarca",
+    "Comodoro Rivadavia", "Córdoba", "Corrientes", "Formosa",
+    "La Plata", "La Rioja", "Mar del Plata", "Mendoza",
+    "Neuquén", "Paraná", "Posadas", "Rawson",
+    "Resistencia", "Río Gallegos", "Rosario", "Salta",
+    "San Juan", "San Luis", "San Miguel de Tucumán",
+    "San Salvador de Jujuy", "Santa Fe", "Santa Rosa",
+    "Santiago del Estero", "Ushuaia", "Viedma"
+  ),
+  
+  lat = c(
+    -38.7196, -41.1335, -34.6037, -28.4696,
+    -45.8641, -31.4201, -27.4692, -26.1775,
+    -34.9214, -29.4135, -38.0055, -32.8895,
+    -38.9516, -31.7319, -27.3621, -43.3002,
+    -27.4514, -51.6230, -32.9442, -24.7829,
+    -31.5375, -33.2950, -26.8083,
+    -24.1858, -31.6333, -36.6208,
+    -27.7951, -54.8019, -40.8135
+  ),
+  
+  lon = c(
+    -62.2724, -71.3103, -58.3816, -65.7852,
+    -67.4966, -64.1888, -58.8306, -58.1781,
+    -57.9544, -66.8558, -57.5426, -68.8458,
+    -68.0591, -60.5238, -55.9009, -65.1023,
+    -58.9867, -69.2168, -60.6505, -65.4232,
+    -68.5364, -66.3356, -65.2176,
+    -65.2995, -60.7000, -64.2900,
+    -64.2615, -68.3030, -62.9967
+  ),
+  
+  viento_cat_I = c(
+    62.8, 52.5, 51.4, 49.1,
+    77.1, 51.4, 52.5, 51.4,
+    52.5, 50.3, 58.3, 44.6,
+    54.8, 59.4, 51.4, 68.5,
+    51.4, 68.5, 57.1, 40.0,
+    45.7, 51.4, 45.7,
+    38.8, 58.3, 57.1,
+    49.1, 68.5, 68.5
+  ),
+  
+  viento_cat_II = c(
+    67.4, 56.3, 55.1, 52.7,
+    82.7, 55.1, 56.3, 55.1,
+    56.3, 53.9, 62.5, 47.8,
+    58.8, 63.7, 55.1, 73.5,
+    55.1, 73.5, 61.2, 42.9,
+    49.0, 55.1, 49.0,
+    41.6, 62.5, 61.2,
+    52.7, 73.5, 73.5
+  ),
+  
+  viento_cat_III_IV = c(
+    72.2, 60.4, 59.1, 56.5,
+    88.7, 59.1, 60.4, 59.1,
+    60.4, 57.8, 67.0, 51.2,
+    63.0, 68.3, 59.1, 78.8,
+    59.1, 78.8, 65.7, 46.0,
+    52.5, 59.1, 52.5,
+    44.7, 67.0, 65.7,
+    56.5, 78.8, 78.8
+  )
+)
+
+#cambio de coordenadas al sistema de referencia
+viento_cirsoc <- viento_cirsoc %>%
+  st_as_sf(
+    coords = c("lon", "lat"),
+    crs = 4326
+  )
+
+```
+
+```{r}
+idx <- st_nearest_feature( #indexado de ciudad más cercano segun coordenadas
+  tanques,
+  viento_cirsoc
+)
+
+tanques <- tanques %>%
+  mutate(
+    ciudad_cercana_Viento = viento_cirsoc$ciudad[idx],
+    viento_cat_III_ms= viento_cirsoc$viento_cat_III_IV[idx]
+  )
+```
+
+```{r}
+library(leaflet)
+
+pal <- colorFactor(
+  palette = c(
+    "lightgreen",
+    "green",
+    "orange",
+    "red",
+    "purple"
+  ),
+  domain = tanques$viento_cat_III_ms
+)
+
+leaflet(tanques) %>%
+  
+  addProviderTiles(
+    providers$Esri.WorldImagery
+  ) %>%
+  
+  addCircleMarkers(
+    radius = 5,
+    color = ~pal(viento_cat_III_ms),
+    stroke = FALSE,
+    fillOpacity = 0.8,
+    
+    popup = ~paste(
+      "<b>ID:</b>", id,
+      "<br><b>Empresa:</b>", empresa,
+      "<br><b>Estado:</b>", estado,
+      "<br><b>Viento Calculo:</b>", viento_cat_III_ms
+    )
+  ) %>%
+  
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~viento_cat_III_ms,
+    title = "Vientos"
+  )
+```
+
+# 2. Discusión y pasos a seguir
+
+## Discusión
+
+- Considerar variables Viento y Actividad Sísmica ¿cómo incorporarlas?
+- Selección de variables significativas.
+- Armar dos modelos. Selección de modelo.
+- Métricas de evaluación.
+- Decisiones que conviene validar con el investigador.
+
+# MUCHAS GRACIAS
