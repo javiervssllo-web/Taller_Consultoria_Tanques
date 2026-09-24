@@ -27,8 +27,8 @@ editor:
 ## 1-Creación de la base de datos
 
 Los datos sobre los tanques, objeto de análisis, se extrajeron de
-informes realizados durante los años 2015 al 2022, los cuales
-se encontraban clasificados según el tipo de auditoría realizada. 
+informes realizados durante los años 2015 al 2022, los cuales se
+encontraban clasificados según el tipo de auditoría realizada.
 
 En algunos casos, las auditorías técnicas son de condición interna ó
 externa, de control, de medición, de mantenimiento y en otros, se trata
@@ -325,8 +325,17 @@ skim(tanques)
 
 ## **3-Datos Georreferenciados**
 
-```{r}
+La georreferenciación agrega una dimensión analítica muy importante al
+EDA porque permite incorporar el contexto espacial de cada tanque. Por
+ejemplo, En un estudio sobre vulnerabilidad estructural, la ubicación es
+fundamental.
 
+Por lo tanto, se procede a transformar las coordenadas a unidades
+consistentes entre todos los tanques y luego a coordenadas geográficas
+del sistema de referencia WGS84 (EPSG:4326), para representarlos en un
+mapa satelital,
+
+```{r}
 #Funcion para pasar las coordenadas de Formato "38°57'04''S" a decimal
 
 #Todos los tanques se encuentran en Argentina por lo tanto longitud y latitud son siempre negativas en sistema decimal (los datos se cargaron especificando S, O, W ó nada)
@@ -335,13 +344,10 @@ library(tidyverse)
 library(stringr)
 
 dms_a_decimal <- function(x, tipo = c("lat", "long")) {
-  
-  tipo <- match.arg(tipo)
-  
+   tipo <- match.arg(tipo)
   nums <- str_extract_all(x, "\\d+") %>%
     map(~ as.numeric(.x))
-  
-  decimal <- map_dbl(nums, ~{
+   decimal <- map_dbl(nums, ~{
     .x[1] + .x[2]/60 + .x[3]/3600
   })
   
@@ -374,9 +380,13 @@ tanques_mapa <- tanques %>%
 #Verificación. En patagonia LAT entre -36 y -41, LONG entre -66 y -71
 summary(tanques_mapa $lat_dd)
 summary(tanques_mapa $long_dd)
+
+
 ```
 
-Gráficamos en mapa
+### Ubicacion de los tanques en sus respectivas coordenadas
+
+Gráficamos en mapa estatico
 
 ```{r}
 library(sf)
@@ -385,7 +395,7 @@ library(ggspatial)   # barra de escala y norte
 tanques_sf <- tanques_mapa %>%
   st_as_sf(
     coords = c("long_dd", "lat_dd"),
-    crs = 4326,
+    crs = 4326, #cambio de coordenadas al sistema de referencia
     remove = FALSE
   )
 
@@ -406,10 +416,9 @@ ggplot() +
 
 ```
 
-Creamos mapa interactivo con referencia satelital
-
-Es especialmente útil para inspeccionar la ubicación real de los tanques
-sobre imágenes satelitales.
+Creamos mapa interactivo con referencia satelital clasificando a los
+tanques por Estado para poder hacer zoom en zonas donde haya
+conglomerados.
 
 ```{r}
 library(leaflet)
@@ -440,5 +449,136 @@ leaflet(tanques_sf) %>%
     pal = pal,
     values = ~estado,
     title = "Estado"
+  )
+```
+
+### Consideraciones respecto a acción sísmica
+
+*(Fuente:
+<https://www.argentina.gob.ar/inpres/ingenieria-sismorresistente/zonificacion-sismica>,*
+
+[*https://www.inpres.gob.ar/desktop/*](https://www.inpres.gob.ar/desktop/)
+
+*y Reglamento INPRES-CIRSOC 103, Parte I, edición julio 2018)*
+
+El peligro sísmico, que es la probabilidad de que ocurra una determinada
+amplitud de movimiento del suelo en un intervalo de tiempo fijado,
+depende del nivel de sismicidad de cada zona. Los Mapas de Zonificación
+Sísmica individualizan zonas con diferentes niveles de Peligro Sísmico.
+En el Mapa de Zonificación Sísmica del Reglamento INPRES-CIRSOC 103, se
+encuentran identificadas 5 zonas.
+
+Dónde caen las principales ciudades, según ese Anexo:
+
+| **Zona** | **Peligrosidad** | **as (aceleracion de diseño)** | **Ciudades (Anexo A)** |
+|:---|:---|:---|:---|
+| **0** | Muy reducida | — | Provincias de Buenos Aires, Santa Fe, Entre Ríos, Corrientes y Misiones **en su totalidad**: CABA, La Plata, Mar del Plata, Rosario, Santa Fe, Paraná, Corrientes, Posadas |
+| **1** | Reducida | 0,08 | Córdoba capital, Río Cuarto, Neuquén capital, Añelo, Santiago del Estero capital |
+| **2** | Moderada | 0,15 | Tucumán y Catamarca **en su totalidad**, San Luis capital, La Rioja capital, Bariloche, San Martín de los Andes |
+| **3** | Elevada | 0,25 | Salta capital y el valle de Lerma, S. S. de Jujuy, Tunuyán, San Carlos, San Rafael, Jáchal |
+| **4** | Muy elevada | 0,35 | **Gran Mendoza completo** (Capital, Godoy Cruz, Guaymallén, Las Heras, Luján de Cuyo, Maipú) y **Gran San Juan completo** (Capital, Chimbas, Rivadavia, Rawson, Santa Lucía, Pocito) |
+
+`as` es la aceleración máxima efectiva del suelo para el sismo de
+diseño, en fracción de `g`
+
+Tambien existen otros factores que ponderan en el diseño de la
+estructura:
+
+-Clasificación del sitio, el suelo amplifica o atenúa las ondas
+sísmicas.
+
+-Factor de riesgo de la construcción, el reglamento agrupa
+construcciones según las consecuencias de sus fallas.
+
+Puesto que no contamos con información respecto al suelo de fundación y
+que estamos analizando en su totalidad estructuras de tanques. Solo
+vamos a considerar la zonificación propuesta por el CIRSOC en el
+analisis.
+
+Para clasificar a cada tanque según la zona sísmica en la que se
+encuentra descargamos la capa SIG de riesgo sísmico publicada por el
+Ministerio de Defensa
+(<https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG>).
+
+Procedemos a integrarlas en la tabla de datos de tanques asociando cada
+coordenada con el respectivo poligono de zonificación.
+
+```{r}
+#Se carga la capa oficial de Departamentos de la República Argentina desde las Capas SIG del Instituto Geográfico Nacional (IGN). El IGN publica estas capas en formato vectorial y en WGS84 / EPSG:4326 
+# Link: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG
+
+library(sf)
+zonas_cirsoc <- st_read(
+  "Datos/inpres_sismos_zonificacion/inpres_sismos_zonificacionPolygon.shp"
+)
+glimpse(zonas_cirsoc) #nam contoene el nombre de los departamentos
+names(zonas_cirsoc)
+st_crs(zonas_cirsoc) #Tiene que ser EPSG:4326 para coincidir con tanque_sf
+```
+
+Union espacial con los tanques, de las variables de interes (zona_sismo,
+y aceler)
+
+```{r}
+library(sf)
+
+#A veces los shapefiles presentan problemas topológicos  y debe subsanearse previamente
+sum(!st_is_valid(zonas_cirsoc))
+which(!st_is_valid(zonas_cirsoc))
+zonas_cirsoc <- st_make_valid(zonas_cirsoc)
+
+#Asociar cada tanque a una zona sísmica, Como los tanques son puntos y las zonas son polígonos:
+sf_use_s2(FALSE)
+
+tanques_zona <- st_join(
+  tanques_sf,
+  zonas_cirsoc,
+  join = st_intersects,
+  left = TRUE
+)
+```
+
+Verificamos en el mapa interactico a que zona pertenece cada tanque
+inventariado.
+
+```{r}
+library(leaflet)
+
+pal <- colorFactor(
+  palette = c(
+    "lightgreen",
+    "green",
+    "orange",
+    "red",
+    "purple"
+  ),
+  domain = tanques_zona$zona_sismo
+)
+
+leaflet(tanques_zona) %>%
+  
+  addProviderTiles(
+    providers$Esri.WorldImagery
+  ) %>%
+  
+  addCircleMarkers(
+    radius = 5,
+    color = ~pal(zona_sismo),
+    stroke = FALSE,
+    fillOpacity = 0.8,
+    
+    popup = ~paste(
+      "<b>ID:</b>", id,
+      "<br><b>Empresa:</b>", empresa,
+      "<br><b>Estado:</b>", estado,
+      "<br><b>Zona Sísmica:</b>", zona_sismo
+    )
+  ) %>%
+  
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~zona_sismo,
+    title = "Zona Sísmica"
   )
 ```
