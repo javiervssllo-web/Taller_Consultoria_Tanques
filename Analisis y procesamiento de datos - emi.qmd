@@ -9,11 +9,10 @@ lang: es
 format:
   html:
     theme: dark
-    highlight-style: dracula
+    highlight-style: pygments
     toc: true
     toc-title: "Índice"
     embed-resources: true
-    css: styles.css
 
 execute:
   echo: true
@@ -226,7 +225,7 @@ viento, es posible estudiar el efecto que tienen estas estructuras en
 como pantallas frente a la superficie de un tanque.
 
 |  |  |
-|-------------------------------|----------------------------------|
+|----------------------------------|--------------------------------------|
 | ![](images/clipboard-2423102979.png){width="271"} | ![](images/clipboard-3950683073.png){width="312"} |
 
 *Figura 6‑6a: A la izquierda, lay out en imagen satelital. A la derecha,
@@ -293,6 +292,9 @@ library(skimr)
 library(naniar)
 library(lubridate)
 
+# Se eliminan variables previas en la sesión
+rm(list=ls())
+
 # Lectura del xml
 tanques <- read_excel("Datos/Datos_Tanques.xlsx") %>%
   clean_names()
@@ -319,12 +321,12 @@ la cantidad de valores faltantes.
 
 ```{r}
 # Variables con la mayor cantidad de datos faltantes
-tanques %>%
+tanques |> 
   summarise(across(everything(),
-                   ~ sum(is.na(.)))) %>%
+                   ~ sum(is.na(.)))) |> 
   pivot_longer(everything(),
                names_to = "variable",
-               values_to = "faltantes") %>%
+               values_to = "faltantes")  |> 
   arrange(desc(faltantes)) |> 
   head()
 
@@ -343,6 +345,7 @@ observan, no se utilizará información sobre los diques de contención en
 el análisis.
 
 ```{r}
+#| include: false
 # se eliminan las variables a no utilizar luego del analisis de datos faltantes
 tanques <- tanques |> select(!(c(dc_compartido, 
                                  comentarios,
@@ -357,6 +360,7 @@ Revisamos que las variables esten almacenadas con el tipo de dato que
 corresponde:
 
 ```{r}
+#| echo: false
 
 tipos_datos <- tibble(
   variable = names(tanques),
@@ -375,9 +379,26 @@ Las variables *cuantitativas* están correctamente almacenadas como
 tipos_datos |> filter(tipo == "numeric")
 ```
 
+Pero si bien `id` es un número, será utilizado como etiqueta, por lo que
+la convertiremos a *character*:
+
+```{r}
+# Se convierte id a factor
+tanques <- tanques |> 
+  mutate(id = as_factor(id))
+
+
+# Se actualizan los tipos de datos
+tipos_datos <- tibble(
+  variable = names(tanques),
+  tipo = sapply(tanques, class)
+)
+```
+
 Vemos las *cualitativas*:
 
 ```{r}
+#| echo: false
 tipos_datos |> filter(tipo == "character")
 ```
 
@@ -394,6 +415,7 @@ Descartamos las siguientes variables del análisis:
   y estas variables no aportan información utlizable.
 
 ```{r}
+#| include: false
 # se eliminan las variables cualitativas a no utilizar
 tanques <- tanques |> select(!(c(oat,
                                  cit,
@@ -408,8 +430,9 @@ Convertimos las variables `estado`, `tipo_de_techo`, `resultado_informe`
 a categóricas:
 
 ```{r}
+#| include: false
 # variables tipo character a factores
-tanques <- tanques %>%
+tanques <- tanques |> 
   mutate(
     estado = as.factor(estado),
     tipo_de_techo = as.factor(tipo_de_techo),
@@ -419,9 +442,10 @@ tanques <- tanques %>%
 ```
 
 Convertimos las variables dicotómicas `medicion_de_asent_dif` y
-`medicion_de_corrosion` a logicas:
+`medicion_de_corrosion` a logicas.
 
 ```{r}
+#| include: false
 # variables tipo character a tipo lógicas
 tanques <- tanques |> 
   mutate(
@@ -478,172 +502,165 @@ ellos o por no poseer más de una o dos observaciones.
 unique(tanques$producto)
 
 # Hay que hacer una tabla de equivalencias para estandarizar nombres y agrupar
-tanques <- tanques |> 
-  mutate(
-    producto = recode(producto,
-                      "Agua" = "AGUA",
-                      "AGUA DULCE" = "AGUA",
-                      "Agua de Inyección"   = "AGUA",
-                      "Agua de formación" = "AGUA",
-                      "Agua de formacion" = "AGUA",
-                      "Agua de Formacion" = "AGUA",
-                      "Agua de Formación" = "AGUA",
-                      "AGUA DE FORMACIÓN" = "AGUA",
-                      "AGUA DE FORMACION" = "AGUA",
-                      "AGUA Y CONDENSADOS" = "AGUA",
-                      "Agua de producción" = "AGUA",
-                      "AGUA HIDROCARBURADA" = "AGUA",
-                      "Agua hidrocarburada" = "AGUA",
-                      "Agua Hidrocarburada" = "AGUA",
-                      "Agua Hidrocarburada." = "AGUA",
-                      "AGUA CON HIDROCARBURO" = "AGUA",
-                      "Almacenado: Agua de producción" = "AGUA",
-                      "AGUA TRATADA" = "AGUA",
-                      "Agua de formación" = "AGUA",
-                      "Aguas Agrias" = "AGUA",
-                      
-                      "PETROLEO TRATADO" = "PETROLEO",
-                      "Petroleo" = "PETROLEO",
-                      "Petróleo" = "PETROLEO",
-                      "Pétroleo" = "PETROLEO",
-                      "PETRÓLEO" = "PETROLEO",
-                      "PETROLEO\r\r\nPETRÓLEO" = "PETROLEO",
-                      "Crudo en especificación" = "PETROLEO",
-                      "CRUDO EN PROCESO" = "PETROLEO",
-                      "CRUDO" = "PETROLEO",
-                      "Crudo" = "PETROLEO",
-                      "CRUDO DE PETROLEO" = "PETROLEO",
-                      "PETROLEO CRUDO" = "PETROLEO",
-                      "PETRÓLEO CRUDO" = "PETROLEO",
-                      "Petróleo crudo" = "PETROLEO",
-                      "Petróleo crudo" = "PETROLEO",
-                      "Almacenamiento de Crudo en especificación"= "PETROLEO",
-                      
-                      "PETRÓLEO/AGUA" = "PETROLEO + AGUA",
-                      "PETROLEO/AGUA" = "PETROLEO + AGUA",
-                      "Petroleo/Agua" = "PETROLEO + AGUA",
-                      "Petróleo + Agua" = "PETROLEO + AGUA",
-                      "Petroleo + Agua" = "PETROLEO + AGUA",
-                      "AGUA Y PETROLEO" = "PETROLEO + AGUA",
-                      "AGUA Y PETRÓLEO" = "PETROLEO + AGUA",
-                      "Agua + Petroleo" = "PETROLEO + AGUA",
-                      "Agua + Petróleo" = "PETROLEO + AGUA",
-                      "AGUA + PETROLEO" = "PETROLEO + AGUA",
-                      "AGUA + PETRÓLEO" = "PETROLEO + AGUA",
-                      "HIDROCARBURO Y AGUA DE FORMACION" = "PETROLEO + AGUA",
-                      "Agua/crudo" = "PETROLEO + AGUA",
-                      "Agua/Petroleo" = "PETROLEO + AGUA",
-                      "PETROLEO y AGUA" = "PETROLEO + AGUA",
-                      "Petróleo Hidratado" = "PETROLEO + AGUA",
-                      "petróleo y agua" = "PETROLEO + AGUA",
-                      "Petróleo y agua" = "PETROLEO + AGUA",
-                      "PETROLEO Y AGUA" = "PETROLEO + AGUA",
-                      "PETROLEO / AGUA FORMACION" = "PETROLEO + AGUA",
-                      "PETROLEO CON AGUA" = "PETROLEO + AGUA",
-                      "CRUDO HIDRATADO" = "PETROLEO + AGUA",
-                      "Crudo Hidratado" = "PETROLEO + AGUA",
-                      "PETROLEO HIDRATADO" = "PETROLEO + AGUA",
-                      "Petróleo / Agua" = "PETROLEO + AGUA",
-                      "AGUA CON PETRÓLEO" = "PETROLEO + AGUA",
-                      "AGUA-PETROLEO" = "PETROLEO + AGUA",
-                      "AGUA+PETROLEO" = "PETROLEO + AGUA",
-                      "AGUA E HIDROCARBUROS" = "PETROLEO + AGUA",
-                      "Agua e Hidrocarburo" = "PETROLEO + AGUA",
-                      "Petróleo y agua)" = "PETROLEO + AGUA",
-                      "Agua y crudo en especificación" = "PETROLEO + AGUA",
-                      "PETROLEO AGUA" = "PETROLEO + AGUA",
-                      "Agua de producción y crudo" = "PETROLEO + AGUA",
-                      "PETROLEO-AGUA" = "PETROLEO + AGUA",
-                      "PETR+AGUA" = "PETROLEO + AGUA",
-                      "PETROLEO + AGUA." = "PETROLEO + AGUA",
-                      "PETROLEO+AGUA" = "PETROLEO + AGUA",
-                      "Agua + Petróleo." = "PETROLEO + AGUA",
-                      
-                      "GASOLINA"  = "GAS OIL",
-                      "BIODIESEL"  = "GAS OIL",
-                      "DIESEL MARINO"  = "GAS OIL",
-                      "Gas oil"  = "GAS OIL",
-                      "Gas Oil"  = "GAS OIL",
-                      "GAS OIL"  = "GAS OIL",
-                      "Gasoil"  = "GAS OIL",
-                      "Infinia Diesel"  = "GAS OIL",
-                      "Gasolina Estabilizada."  = "GAS OIL",
-                      "FUEL OIL"  = "GAS OIL",
-                      "Fuel Oil"  = "GAS OIL",
-                      "Fuel oil"  = "GAS OIL",
-                      "GAS OIL Liviano de Cracking Catalítico"  = "GAS OIL",
-                      "Intermedio Gas Oil"  = "GAS OIL",
-                      
-                      "Nafta"  = "NAFTA",
-                      "Nafta Hidrotratada Liviana" = "NAFTA",
-                      "NAFTA VIRGEN"  = "NAFTA",
-                      "Nafta Virgen"  = "NAFTA",
-                      "Nafta Super"  = "NAFTA",
-                      "Nafta Súper"  = "NAFTA",
-                      "NAFTA ULTRA"  = "NAFTA",
-                      "Nafta Catalítica"  = "NAFTA",
-                      "NAFTAS"  = "NAFTA",
-                      "NAFTA LIGERA CREQUEADA"  = "NAFTA",
-                      "NAFTA COMÚN"  = "NAFTA",
-                      "NAFTA LIVIANA" = "NAFTA",
-                      
-                      "Parafina" = "PARAFINA",
-                      "Solvente Parafínico Hidrogenado" = "PARAFINA",
-                      "PARAFINA HIDROGENADA" = "PARAFINA",
-                      "N-PARAFINA" = "PARAFINA",
-                      
-                      "Base Lubricante" = "BASE LUBRICANTES",
-                      "Base lubricante" = "BASE LUBRICANTES", 
-                      "Corte Lubricante" = "BASE LUBRICANTES",
-                      "BASE LUBRICANTE" = "BASE LUBRICANTES",
-                      
-                      "ISOHEXANO" = "LIVIANOS",
-                      "MTBE" = "LIVIANOS",
-                      "BENCENO" = "LIVIANOS",
-                      "ESTIRENO" = "LIVIANOS",
-                      "Metanol" = "LIVIANOS",
-                      "METANOL" = "LIVIANOS",
-                      "Aguarrás" = "LIVIANOS",
-                      "Alkilado" = "LIVIANOS",
-                      
-                      "INTERMEDIO" = "INTERMEDIOS",
-                      "JP1" = "INTERMEDIOS",
-                      "Kerosene" = "INTERMEDIOS",
-                      "CONDENSADO" = "INTERMEDIOS",
-                      "REFORMADO" = "INTERMEDIOS",
-                      "Reformado Liviano" = "INTERMEDIOS",
-                      "CORTE AROMATICO LIVIANO" = "INTERMEDIOS",
-                      "CORTE AROMATICO LIVIANO\r\r\nAROMÁTICO\r\r\nCORTE AROMATICO LIVIANO" = "INTERMEDIOS",
-                      
-                      "Extracto Aromático" = "PESADOS",
-                      "EXTRACTO" = "PESADOS",
-                      "EXTENSOR" = "PESADOS",
-                      "Destilado Corte 20" = "PESADOS",
-                      "Slop de Coque" = "PESADOS",
-                      "SLOP" = "PESADOS",
-                      "Slop" = "PESADOS",
-                      "Slurry" = "PESADOS",
-                      "LFO 380" = "PESADOS",
-                      "BISOLVENTE" = "PESADOS",
-                      
-                      "EN TRAMITE" = "OTROS",
-                      "LAB FINAL." = "OTROS",
-                      "Corte 20364" = "OTROS",
-                      "Componente petroquímico." = "OTROS",
-                      "DRIPOLENE" = "OTROS",
-                      "Refinado" = "OTROS",
-                      "REFINADO" = "OTROS",
-                      "Otros (aclarar cuál)\r\r\nSi selecciona Otro aclarar :\r\r\nINTERMEDIOS" = "OTROS"
-                      )
-    ) |> 
-# Hay un valor "NA" que convertimos a NA
-  mutate(
-    producto = na_if(producto, "NA")
+dicc <- c(
+  "Agua" = "AGUA",
+  "AGUA DULCE" = "AGUA",
+  "Agua de Inyección"   = "AGUA",
+  "Agua de formación" = "AGUA",
+  "Agua de formacion" = "AGUA",
+  "Agua de Formacion" = "AGUA",
+  "Agua de Formación" = "AGUA",
+  "AGUA DE FORMACIÓN" = "AGUA",
+  "AGUA DE FORMACION" = "AGUA",
+  "AGUA Y CONDENSADOS" = "AGUA",
+  "Agua de producción" = "AGUA",
+  "AGUA HIDROCARBURADA" = "AGUA",
+  "Agua hidrocarburada" = "AGUA",
+  "Agua Hidrocarburada" = "AGUA",
+  "Agua Hidrocarburada." = "AGUA",
+  "AGUA CON HIDROCARBURO" = "AGUA",
+  "Almacenado: Agua de producción" = "AGUA",
+  "AGUA TRATADA" = "AGUA",
+  "Aguas Agrias" = "AGUA",
+  
+  "PETROLEO TRATADO" = "PETROLEO",
+  "Petroleo" = "PETROLEO",
+  "Petróleo" = "PETROLEO",
+  "Pétroleo" = "PETROLEO",
+  "PETRÓLEO" = "PETROLEO",
+  "PETROLEO\r\r\nPETRÓLEO" = "PETROLEO",
+  "Crudo en especificación" = "PETROLEO",
+  "CRUDO EN PROCESO" = "PETROLEO",
+  "CRUDO" = "PETROLEO",
+  "Crudo" = "PETROLEO",
+  "CRUDO DE PETROLEO" = "PETROLEO",
+  "PETROLEO CRUDO" = "PETROLEO",
+  "PETRÓLEO CRUDO" = "PETROLEO",
+  "Petróleo crudo" = "PETROLEO",
+  "Almacenamiento de Crudo en especificación"= "PETROLEO",
+  
+  "PETRÓLEO/AGUA" = "PETROLEO + AGUA",
+  "PETROLEO/AGUA" = "PETROLEO + AGUA",
+  "Petroleo/Agua" = "PETROLEO + AGUA",
+  "Petróleo + Agua" = "PETROLEO + AGUA",
+  "Petroleo + Agua" = "PETROLEO + AGUA",
+  "AGUA Y PETROLEO" = "PETROLEO + AGUA",
+  "AGUA Y PETRÓLEO" = "PETROLEO + AGUA",
+  "Agua + Petroleo" = "PETROLEO + AGUA",
+  "Agua + Petróleo" = "PETROLEO + AGUA",
+  "AGUA + PETROLEO" = "PETROLEO + AGUA",
+  "AGUA + PETRÓLEO" = "PETROLEO + AGUA",
+  "HIDROCARBURO Y AGUA DE FORMACION" = "PETROLEO + AGUA",
+  "Agua/crudo" = "PETROLEO + AGUA",
+  "Agua/Petroleo" = "PETROLEO + AGUA",
+  "PETROLEO y AGUA" = "PETROLEO + AGUA",
+  "Petróleo Hidratado" = "PETROLEO + AGUA",
+  "petróleo y agua" = "PETROLEO + AGUA",
+  "Petróleo y agua" = "PETROLEO + AGUA",
+  "PETROLEO Y AGUA" = "PETROLEO + AGUA",
+  "PETROLEO / AGUA FORMACION" = "PETROLEO + AGUA",
+  "PETROLEO CON AGUA" = "PETROLEO + AGUA",
+  "CRUDO HIDRATADO" = "PETROLEO + AGUA",
+  "Crudo Hidratado" = "PETROLEO + AGUA",
+  "PETROLEO HIDRATADO" = "PETROLEO + AGUA",
+  "Petróleo / Agua" = "PETROLEO + AGUA",
+  "AGUA CON PETRÓLEO" = "PETROLEO + AGUA",
+  "AGUA-PETROLEO" = "PETROLEO + AGUA",
+  "AGUA+PETROLEO" = "PETROLEO + AGUA",
+  "AGUA E HIDROCARBUROS" = "PETROLEO + AGUA",
+  "Agua e Hidrocarburo" = "PETROLEO + AGUA",
+  "Petróleo y agua)" = "PETROLEO + AGUA",
+  "Agua y crudo en especificación" = "PETROLEO + AGUA",
+  "PETROLEO AGUA" = "PETROLEO + AGUA",
+  "Agua de producción y crudo" = "PETROLEO + AGUA",
+  "PETROLEO-AGUA" = "PETROLEO + AGUA",
+  "PETR+AGUA" = "PETROLEO + AGUA",
+  "PETROLEO + AGUA." = "PETROLEO + AGUA",
+  "PETROLEO+AGUA" = "PETROLEO + AGUA",
+  "Agua + Petróleo." = "PETROLEO + AGUA",
+  
+  "GASOLINA"  = "GAS OIL",
+  "BIODIESEL"  = "GAS OIL",
+  "DIESEL MARINO"  = "GAS OIL",
+  "Gas oil"  = "GAS OIL",
+  "Gas Oil"  = "GAS OIL",
+  "GAS OIL"  = "GAS OIL",
+  "Gasoil"  = "GAS OIL",
+  "Infinia Diesel"  = "GAS OIL",
+  "Gasolina Estabilizada."  = "GAS OIL",
+  "FUEL OIL"  = "GAS OIL",
+  "Fuel Oil"  = "GAS OIL",
+  "Fuel oil"  = "GAS OIL",
+  "GAS OIL Liviano de Cracking Catalítico"  = "GAS OIL",
+  "Intermedio Gas Oil"  = "GAS OIL",
+  
+  "Nafta"  = "NAFTA",
+  "Nafta Hidrotratada Liviana" = "NAFTA",
+  "NAFTA VIRGEN"  = "NAFTA",
+  "Nafta Virgen"  = "NAFTA",
+  "Nafta Super"  = "NAFTA",
+  "Nafta Súper"  = "NAFTA",
+  "NAFTA ULTRA"  = "NAFTA",
+  "Nafta Catalítica"  = "NAFTA",
+  "NAFTAS"  = "NAFTA",
+  "NAFTA LIGERA CREQUEADA"  = "NAFTA",
+  "NAFTA COMÚN"  = "NAFTA",
+  "NAFTA LIVIANA" = "NAFTA",
+  
+  "Parafina" = "PARAFINA",
+  "Solvente Parafínico Hidrogenado" = "PARAFINA",
+  "PARAFINA HIDROGENADA" = "PARAFINA",
+  "N-PARAFINA" = "PARAFINA",
+  
+  "Base Lubricante" = "BASE LUBRICANTES",
+  "Base lubricante" = "BASE LUBRICANTES", 
+  "Corte Lubricante" = "BASE LUBRICANTES",
+  "BASE LUBRICANTE" = "BASE LUBRICANTES",
+  
+  "ISOHEXANO" = "LIVIANOS",
+  "MTBE" = "LIVIANOS",
+  "BENCENO" = "LIVIANOS",
+  "ESTIRENO" = "LIVIANOS",
+  "Metanol" = "LIVIANOS",
+  "METANOL" = "LIVIANOS",
+  "Aguarrás" = "LIVIANOS",
+  "Alkilado" = "LIVIANOS",
+  
+  "INTERMEDIO" = "INTERMEDIOS",
+  "JP1" = "INTERMEDIOS",
+  "Kerosene" = "INTERMEDIOS",
+  "CONDENSADO" = "INTERMEDIOS",
+  "REFORMADO" = "INTERMEDIOS",
+  "Reformado Liviano" = "INTERMEDIOS",
+  "CORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+  "CORTE AROMATICO LIVIANO\r\r\nAROMÁTICO\r\r\nCORTE AROMATICO LIVIANO" = "INTERMEDIOS",
+  
+  "Extracto Aromático" = "PESADOS",
+  "EXTRACTO" = "PESADOS",
+  "EXTENSOR" = "PESADOS",
+  "Destilado Corte 20" = "PESADOS",
+  "Slop de Coque" = "PESADOS",
+  "SLOP" = "PESADOS",
+  "Slop" = "PESADOS",
+  "Slurry" = "PESADOS",
+  "LFO 380" = "PESADOS",
+  "BISOLVENTE" = "PESADOS",
+  
+  "EN TRAMITE" = "OTROS",
+  "LAB FINAL." = "OTROS",
+  "Corte 20364" = "OTROS",
+  "Componente petroquímico." = "OTROS",
+  "DRIPOLENE" = "OTROS",
+  "Refinado" = "OTROS",
+  "REFINADO" = "OTROS",
+  "Otros (aclarar cuál)\r\r\nSi selecciona Otro aclarar :\r\r\nINTERMEDIOS" = "OTROS"
   )
 
-# Se convierte la variable producto de tipo character a factor
 tanques <- tanques |> 
   mutate(
+    # Reemplaza usando el diccionario original; si el valor no está en el diccionario, conserva el valor original
+    producto = coalesce(dicc[producto], producto),
+    producto = na_if(producto, "NA"),
     producto = as.factor(producto)
   )
 ```
@@ -651,6 +668,7 @@ tanques <- tanques |>
 Finalmente podemos ver el ranking de productos almacenados:
 
 ```{r}
+#| echo: false
 # Quedaron 11 valores unicos
 tanques |> 
   count(producto, sort = TRUE)
@@ -687,37 +705,33 @@ tanques <- tanques |>
 unique(tanques$empresa)
 
 # Para simplificar la lectura se reemplazan las 3 letras por el nombre de la empresa
+dicc <- c("ter" = "T GB",
+          "fsa" = "F SA",
+          "ypf" = "YPF",
+          "plu" = "PLUSPETROL",
+          "vis" = "VISTA",
+          "vil" = "VILUCO",
+          "geo" = "GEOPARK",
+          "tra" = "TGS",
+          "cen" = "CENTRALES DCA",
+          "cil" = "CILP",
+          "pet" = "PETROBRAS",
+          "ena" = "ENAP",
+          "ope" = "PELSA",
+          "pan" = "PAN AMERICAN",
+          "oil" = "OILSTONE",
+          "tec" = "TECPETROL",
+          "ref" = "REFINORTE",
+          "exx" = "EXXON",
+          "cap" = "CAPEX",
+          "old" = "OLDELVAL",
+          "cpf" = "CPF BC")
 
 tanques <- tanques |> 
   mutate(
-    empresa = recode(empresa,
-                     "ter" = "T GB",
-                     "fsa" = "F SA",
-                     "ypf" = "YPF",
-                     "plu" = "PLUSPETROL",
-                     "vis" = "VISTA",
-                     "vil" = "VILUCO",
-                     "geo" = "GEOPARK",
-                     "tra" = "TGS",
-                     "cen" = "CENTRALES DCA",
-                     "cil" = "CILP",
-                     "pet" = "PETROBRAS",
-                     "ena" = "ENAP",
-                     "ope" = "PELSA",
-                     "pan" = "PAN AMERICAN",
-                     "oil" = "OILSTONE",
-                     "tec" = "TECPETROL",
-                     "ref" = "REFINORTE",
-                     "exx" = "EXXON",
-                     "cap" = "CAPEX",
-                     "old" = "OLDELVAL",
-                     "cpf" = "CPF BC",
-    )
-  )
-
-# Se convierte la variable empresa de tipo character a factor
-tanques <- tanques |> 
-  mutate(
+    # Reemplaza usando el diccionario original; si el valor no está en el diccionario, conserva el valor original
+    empresa = coalesce(dicc[empresa], empresa),
+    empresa = na_if(empresa, "NA"),
     empresa = as.factor(empresa)
   )
 ```
@@ -725,6 +739,7 @@ tanques <- tanques |>
 Finalmente podemos ver el ranking de cantidad de tanques por empresa:
 
 ```{r}
+#| echo: false
 # El ranking de tanques por empresa
 tanques |> 
   count(empresa, sort = TRUE)
@@ -738,12 +753,14 @@ Se muestra como quedó la base de datos con las 16 variables
 seleccionadas:
 
 ```{r}
+#| echo: false
 head(tanques)
 ```
 
 Finalmente se revisa que los tipos de datos hayan quedado como se desea:
 
 ```{r}
+#| echo: false
 tipos_datos <- tibble(
   variable = names(tanques),
   tipo = sapply(tanques, class)
@@ -788,6 +805,7 @@ outliers, por lo que se analizan cada una puntualmente.
 **AÑO MONTAJE** (`ano_montaje`)
 
 ```{r}
+#| echo: false
 #| message: false
 #| warning: false
 
@@ -816,14 +834,18 @@ Se detectan dos valores atípicos, un registro del año 212 y uno de 1921.
 Buscamos los registros.
 
 ```{r}
-tanques |> 
+#| echo: false
+outliers <- tanques |>
   filter(ano_montaje %in% c(212, 1921))
+
+outliers
 ```
 
-Los dos se encuentran en funcionamiento. Corregimos el typo de "212" por
-"2012":
+Los dos se encuentran en funcionamiento. Se corrige el typo de "212" por
+"2012" (id = 281).
 
 ```{r}
+#| include: false
 
 tanques <- tanques |> 
   mutate(ano_montaje = if_else(ano_montaje == 212, 2012, ano_montaje))
@@ -834,6 +856,7 @@ tanques <- tanques |>
 La variable diametro también muestra un posible outlier.
 
 ```{r}
+#| echo: false
 #| message: false
 #| warning: false
 
@@ -865,8 +888,9 @@ y observamos los registros comparados con ese valor para un mejor
 análisis.
 
 ```{r}
+#| echo: false
 outliers |> 
-  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura),2) |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
   select(id, volumen_mat, volumen,e_altura,e_diametro)
 ```
 
@@ -881,8 +905,9 @@ Debido a que no se puede identificar correctamente el error pero se sabe
 con certeza su existencia, se procede a eliminar el registro con id=246.
 
 ```{r}
+#| include: false
 tanques <- tanques |> 
-  filter(id != 246)
+  filter(id != "246")
 ```
 
 **ALTURA** (`e_altura`)
@@ -890,6 +915,7 @@ tanques <- tanques |>
 La variable altura también muestra un posible outlier. Lo buscamos:
 
 ```{r}
+#| echo: false
 #| message: false
 #| warning: false
 
@@ -918,22 +944,168 @@ los registros (calculando el volumen matemáticamente) para analizar con
 mayor detalle:
 
 ```{r}
+#| echo: false
 outliers |> 
-  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura),2) |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
   select(id, volumen_mat, volumen,e_altura,e_diametro)
 
 ```
 
 El de 87.6m de altura (id = 180) tiene casi todos los datos faltantes,
 por lo que no se puede validar si es un typo pero se sabe que
-fisicamente no es posible esa construcción por lo que se elimina. El de
-36.6m (id = 323) podría pensarse inicialmente como un typo pero el
-calculo de volumen muestra que también allí hay error, por lo que al no
-poder corregirlo también se elimina.
+fisicamente no es posible esa altura de construcción, por lo que se
+elimina. El de 36.6m (id = 323) podría pensarse inicialmente como un
+typo pero el calculo de volumen muestra que también allí hay error, por
+lo que al no poder corregirlo también se elimina.
 
 ```{r}
+#| include: false
 tanques <- tanques |> 
-  filter(!id %in% c(180,323))
+  filter(!id %in% c("180","323"))
+```
+
+**VOLUMEN** (`volumen`)
+
+Buscamos los outliers en volumen:
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
+# Criterio de outliers (ignora NA)
+umbral_sup <- quantile(tanques$volumen, 0.99, na.rm = TRUE)
+umbral_inf <- quantile(tanques$volumen, 0.01, na.rm = TRUE)
+
+# Filtrado de las filas con el criterio de outliers
+outliers <- tanques |> 
+  filter(volumen > umbral_sup | volumen < umbral_inf)
+
+tanques |> 
+  ggplot(aes(x=id, y=volumen))+
+  geom_point()+
+  geom_text(
+    data = outliers,
+    aes(label = volumen),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+
+Vemos que hay un volumen de 50000m3 que considerablemente grande para un
+tanque. Revisamos el registro.
+
+```{r}
+#| echo: false
+outliers |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
+  select(id, volumen_mat, volumen,e_altura,e_diametro) |> 
+  filter(volumen == 50000)
+```
+
+El registro (id = 111) parece correcto debido a que coincide el valor
+esperado de volumen calculado con las otras variables (51.782m3) versus
+el registrado (50.000m3). Pero al no haber más registros en ese orden de
+volumen procedemos a calcular la *distancia de Cook* para saber si va a
+influenciar los modelos que se apliquen luego:
+
+```{r}
+#| echo: false
+# Se realiza un modelo con ajuste lineal
+modelo <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
+
+# Se calcula la distancia de Cook
+cooks <- cooks.distance(modelo)
+
+# Se muestra graficamente
+df_cooks <- data.frame(
+  id = 1:length(cooks),
+  cooks = cooks
+)
+
+ggplot(df_cooks, aes(x = id, y = cooks)) +
+  geom_point() +
+  geom_text(
+    data = subset(df_cooks, cooks == max(cooks)),
+    aes(label = id),
+    vjust = -1, color = "red"
+  )+
+  coord_cartesian(clip = "off")
+```
+
+Puede apreciarse que este registro (id = 111) no afectará
+significativamente el modelo, por lo que no se elimina.
+
+De la gráfica de *distancia de Cook* se observa un nuevo registro (id =
+171) muy influyente (mayor a 1). Por lo que se procede a su revisión.
+
+```{r}
+#| echo: false
+outlier_171 <- tanques |>
+  filter(id == "171") |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
+
+outlier_171
+```
+
+No pareciera haber nada extraño. Al realizar un modelo ajustado con las
+variables de construcción (volumen, altura, etc.) con y sin ese valor
+para ver como cambian los coeficientes se observa que no hay variación
+y, por lo tanto, no se modifica.
+
+```{r}
+#| eval: false
+#| include: false
+
+# Modelos ajustados con y sin ese registro
+modelo_full <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
+modelo_sin <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques[tanques$id != "171", ])
+
+# Comparación de modelos
+summary(modelo_full)
+summary(modelo_sin)
+```
+
+**BONFERRONI**
+
+Para finalizar con el analisis de outliers se realiza el *test de*
+*Bonferroni* para encontrar datos influyentes entre las variables de
+construcción (volumen, altura, etc.).
+
+```{r}
+#| echo: false
+#| message: false
+#| warning: false
+library(car)
+
+modelo <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
+
+print(outlierTest(modelo))
+```
+
+Luego se procede a revisar esos registros (números de fila = 201 y 187)
+en busca de posibles errores.
+
+```{r}
+#| echo: false
+
+outliers <- tanques |> 
+  filter(row_number() %in% c(201,187)) |> 
+  mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
+
+outliers
+```
+
+Se observa un typo en el volumen del primer registro (id = 199). Se
+registró un valor de 1300m3 pero el calculo matemático arroja
+13130.15m3, que es acorde a lo esperado, por lo que se corrije su valor
+a 13000m3.
+
+```{r}
+#| include: false
+
+tanques <- tanques |> 
+  mutate(volumen = if_else(as.character(id) == "199", 13000, volumen))
 ```
 
 ### Colinealidad
@@ -960,9 +1132,9 @@ pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virol
 ```
 
 Vemos que aumentaron las correlaciones, ahora si el volumen y el
-diametro están fuertemente correlacionados (0.91), también lo estan el
+diametro están fuertemente correlacionados (0.92), también lo estan el
 diametro con la cantidad de virolas (0.83) y el volumen con la cantidad
-de virolas (0.74), todo lo cual tiene mucho sentido desde la física del
+de virolas (0.75), todo lo cual tiene mucho sentido desde la física del
 problema.
 
 **FACTOR DE INFLACIÓN DE LA VARIANZA (VIF)**
@@ -994,7 +1166,7 @@ vif_pair <- sapply(vars, function(v){
 
 # Se convierte a tibble y se ordena para mostrar correctamente
 VIF <- data.frame(
-  VIF = print(round(vif_pair,3), digits = 4)
+  VIF = round(vif_pair,3)
 ) %>%
   arrange(desc(VIF))
 
