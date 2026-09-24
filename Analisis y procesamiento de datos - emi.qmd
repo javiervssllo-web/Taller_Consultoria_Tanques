@@ -757,7 +757,7 @@ tipos_datos
 **ANÁLISIS DE CORRELACIÓN**
 
 Se procede inspeccionar la dispersión de las variables *cuantitativas*
-para ver su colinealidad.
+para ver su correlación.
 
 ```{r}
 #| echo: false
@@ -777,7 +777,8 @@ pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virol
 Se observa que no hay correlaciones fuertes entre las variables, siendo
 la máxima de 0.71 entre el volumen y la cantidad de virolas de los
 tanques, lo cual concuerda con las características constructivas
-esperadas.
+esperadas pero se esperaría que fuesen un poco mayor ya que en el diseño
+físico se encuentran fuertemente relacionadas.
 
 ### Outliers
 
@@ -937,11 +938,11 @@ tanques <- tanques |>
 
 ### Colinealidad
 
-**ANALISIS DE CORRELACIÓN**
-
 Una vez eliminados los outliers volvemos a revisar la correlación y la
 inflación de la varianza (VIF) para ver si hay colinealidad entre las
 variables numéricas.
+
+**ANALISIS DE CORRELACIÓN**
 
 ```{r}
 #| echo: false
