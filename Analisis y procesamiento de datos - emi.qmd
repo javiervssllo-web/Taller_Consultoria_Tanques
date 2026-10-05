@@ -43,25 +43,19 @@ A continuación, se explican los parámetros observados de las auditorias.
 
 ### Información Disponible
 
-CLASIFICACION DE LA INFORMACION
+### Identificación
 
-Los informes disponibles se clasificaron por número de documento y por
-año, de la siguiente manera:
+Variables: `id`, `oat`, `cit` y `taah`.
 
-ID: número de reporte de tanque
-
-OAT: Numero de informe
-
-Año de informe
-
-### OAT/CIT
-
-El número CIT permite reconocer el tanque dentro del sistema de la base
-de datos de la organización que realiza las auditorias. En este caso, el
-número de OAT, es la identificación interna para determinar el origen de
-la información (número de informe/año de informe).
+El número `cit` permite reconocer el tanque dentro del sistema de la
+base de datos de la organización que realiza las auditorias. En este
+caso, el número de `oat`, es la identificación interna para determinar
+el origen de la información (número de informe/año de informe) y también
+sirven a esta función las variables `id` y `taah`.
 
 ### Ubicación (Lat/Long)
+
+Variables:
 
 La ubicación es importante a la hora de reconocer el tipo de clima al
 que se encuentra expuesto el tanque, como lo es por ejemplo la velocidad
@@ -176,6 +170,8 @@ operan con márgenes de inversiones más ajustados.
 
 ### Nomenclatura
 
+Variables: `archivo_doc`, `adjuntos` y `tipoinforme`.
+
 NOMENCLATURA DEL TANQUE/NOMBRE DE INFORME INTERNO/TIPO DE INFORME
 
 La nomenclatura es parte de la identificación del tanque y el nombre del
@@ -183,7 +179,9 @@ informe interno para tener trazabilidad de la información extraída.
 
 ### Virolas
 
-ESPESOR PRIMER VIROLA (`e_espesor1er_virola`)
+Variables: `e_espesor1er_virola` y `e_virolas`.
+
+ESPESOR PRIMER VIROLA
 
 El espesor influye en la resistencia del tanque frente a la acción
 externa sobre su superficie. A partir del espesor de la primera virola,
@@ -195,7 +193,7 @@ de integridad del tanque. Por otro lado, también es la que recibe mayor
 carga vertical y esto para tanques esbeltos H/D \> 0.7, según Herrera
 (2007), produce mayor riesgo de pandeo.
 
-CANTIDAD DE VIROLAS (`e_virolas`)
+CANTIDAD DE VIROLAS
 
 Conocer la cantidad de virolas, ayuda a comprender la capacidad de
 almacenamiento, estabilidad estructural, además facilita la inspección y
@@ -204,6 +202,8 @@ cortas, exhibe un comportamiento levemente diferente al de uno con
 escasas virolas más altas ante fenómenos de abolladura.
 
 ### Resultado del informe
+
+Variable: `resultado_informe`.
 
 Esta información permite conocer las tareas a realizarse en el tanque,
 en función del resultado de la auditoria. Así se puede extrapolar la
@@ -214,7 +214,7 @@ almacenados.
 
 ### Diques de Contención
 
-DC-INDIVIDUAL/COMPARTIDO/DIMENSIONES
+Variables: `dc_individual`, `dc_compartido` y `dc_dimensiones`.
 
 Los diques de contención son parte de la infraestructura de los tanques
 y forman parte de un requisito obligatorio. Desde un punto de vista
@@ -232,6 +232,8 @@ como pantallas frente a la superficie de un tanque.
 imagen de interior del recinto de contención*
 
 ### Tipo de Techo
+
+Variable: `tipo_de_techo`.
 
 El tipo de techo puede afectar la seguridad operativa del tanque, los
 techos flotantes son más propensos a problemas como la acumulación de
@@ -251,7 +253,7 @@ problemas de *sloshing* (oleaje) afectando la estructura del techo.
 
 ### Corrosión y Asentamientos
 
-MEDICION DE CORROSION/MEDICION DE ASENTAMIENTOS
+Variables: `medicion_de_corrosion` y `medicion_de_asent_dif`.
 
 La corrosión puede comprometer la integridad estructural del tanque, por
 ello, conocer la existencia de estas mediciones puede colaborar en el
@@ -268,6 +270,8 @@ diferenciales pueden causar tensiones de deseadas en las soldaduras y
 juntas del tanque, lo que aumenta el riesgo de fugas y derrames
 
 ### Comentarios y Adjuntos
+
+Variables: `archivo_doc`, `adjuntos` y `tipoinforme`.
 
 En este ítem se pretende resaltar información que pueda ser de utilidad,
 o aporte mayor claridad a la base de datos, de manera visual o
@@ -313,7 +317,7 @@ print(tanques)
 Son 263 individuos (tanques) a los que se les observaron 27 variables. A
 priori se estima que hay muchos valores faltantes.
 
-### Valores faltantes
+### Valores faltantes (var)
 
 En la inspección visual se observa una gran cantidad de datos faltantes
 distribuidos en todas las variables, por lo que se procede a identificar
@@ -354,6 +358,32 @@ tanques <- tanques |> select(!(c(dc_compartido,
                                  comentarios,
                                  dc_dimensiones,
                                  dc_individual)))
+
+```
+
+### Valores faltantes (reg)
+
+Y también se deben revisar los registros para no mantener aquellos que
+tengan una gran cantidad de datos faltantes. Como criterio se considera
+que los informes deben tener más datos registrados que ausentes, por lo
+que al ser 23 variables, se considera que registros con 12 o más NA
+serán eliminados.
+
+```{r}
+# Se observan los registros con mayor cantidad de datos faltantes
+tanques |> 
+  mutate(num_na = rowSums(is.na(across(everything())))) |> 
+  select(id, num_na) |>
+  arrange(desc(num_na)) |> 
+  head()
+```
+
+Por lo tanto, se eliminan 4 registros (id 180, 409, 410 y 311).
+
+```{r}
+# Se eliminan 4 registros con +50% de NA
+tanques <- tanques |> 
+  filter(!id %in% c(180, 409, 410, 311))
 
 ```
 
@@ -435,16 +465,47 @@ Asignamos a los NA en variables categóricas el estado "DESCONOCIDO":
 #Estados desconocidos
 tanques <- tanques %>%
   mutate(
-    estado = replace_na(estado, "ESTADO DESCONOCIDO"),
-    producto = replace_na(producto, "PRODUCTO DESCONOCIDO"),
-    empresa = replace_na(empresa, "EMPRESA DESCONOCIDA"),
-    tipo_de_techo = replace_na(tipo_de_techo , "TIPO de TECHO DESCONOCIDO"),
-    resultado_informe = replace_na(resultado_informe, "RESULTADO DESCONOCIDO")
+    estado = replace_na(estado, "DESCONOCIDO"),
+    producto = replace_na(producto, "DESCONOCIDO"),
+    empresa = replace_na(empresa, "DESCONOCIDO"),
+    tipo_de_techo = replace_na(tipo_de_techo , "DESCONOCIDO"),
+    resultado_informe = replace_na(resultado_informe, "DESCONOCIDO"),
+    medicion_de_corrosion = replace_na(resultado_informe, "DESCONOCIDO"),
+    medicion_de_asent_dif = replace_na(medicion_de_asent_dif, "DESCONOCIDO")
   )
 ```
 
-Convertimos las variables `estado`, `tipo_de_techo`, `resultado_informe`
-a categóricas:
+La variable `tipo_de_techo` no es muy explicativa con el nombre de sus
+categorías. Por ejemplo, utiliza "F" para indicar "tipo de techo Fijo"
+que puede confundirse con "Flotante".
+
+```{r}
+# Se convierte a factor y se observan los datos
+tanques |> 
+  mutate(tipo_de_techo = factor(tipo_de_techo)) |> 
+  select(tipo_de_techo) |> 
+  summary()
+```
+
+Cambiamos esas categorías.
+
+```{r}
+# Se realizan las modificaciones
+tanques <- tanques |> 
+  mutate(tipo_de_techo = case_when(
+    tipo_de_techo == "F" ~ "FIJO",
+    tipo_de_techo == "FLOT" ~ "FLOTANTE",
+    TRUE ~ tipo_de_techo   # mantiene el resto igual
+  )) |> 
+  mutate(tipo_de_techo = factor(tipo_de_techo))
+
+# Se observa que los niveles hayan quedado bien
+tanques |> 
+  select(tipo_de_techo) |> 
+  summary()
+```
+
+Convertimos las variables `estado` y `resultado_informe` a categóricas:
 
 ```{r}
 #| include: false
@@ -452,31 +513,11 @@ a categóricas:
 tanques <- tanques |> 
   mutate(
     estado = as.factor(estado),
-    tipo_de_techo = as.factor(tipo_de_techo),
-    resultado_informe = as.factor(resultado_informe)
+    resultado_informe = as.factor(resultado_informe),
+    medicion_de_asent_dif = as.factor(medicion_de_asent_dif),
+    medicion_de_corrosion = as.factor(medicion_de_corrosion)
   )
 
-```
-
-Convertimos las variables dicotómicas `medicion_de_asent_dif` y
-`medicion_de_corrosion` a logicas.
-
-```{r}
-#| include: false
-# variables tipo character a tipo lógicas
-tanques <- tanques |> 
-  mutate(
-    medicion_de_asent_dif = case_when(
-      medicion_de_asent_dif == "SI" ~ TRUE,
-      medicion_de_asent_dif == "NO" ~ FALSE,
-      is.na(medicion_de_asent_dif) ~ NA
-    ),
-    medicion_de_corrosion = case_when(
-      medicion_de_corrosion == "SI" ~ TRUE,
-      medicion_de_corrosion == "NO" ~ FALSE,
-      is.na(medicion_de_corrosion) ~ NA
-    )
-  )
 ```
 
 Se debe corregir la variable `producto` ya que por falta de criterios de
@@ -968,17 +1009,14 @@ outliers |>
 
 ```
 
-El de 87.6m de altura (id = 180) tiene casi todos los datos faltantes,
-por lo que no se puede validar si es un typo pero se sabe que
-fisicamente no es posible esa altura de construcción, por lo que se
-elimina. El de 36.6m (id = 323) podría pensarse inicialmente como un
-typo pero el calculo de volumen muestra que también allí hay error, por
-lo que al no poder corregirlo también se elimina.
+El de 36.6m (id = 323) podría pensarse inicialmente como un typo pero el
+calculo de volumen muestra que hay un error en el valor registado, por
+lo que al no poder corregirlo se elimina.
 
 ```{r}
 #| include: false
 tanques <- tanques |> 
-  filter(!id %in% c("180","323"))
+  filter(!id %in% c("323"))
 ```
 
 **VOLUMEN** (`volumen`)
@@ -1022,12 +1060,40 @@ outliers |>
 
 El registro (id = 111) parece correcto debido a que coincide el valor
 esperado de volumen calculado con las otras variables (51.782m3) versus
-el registrado (50.000m3). Pero al no haber más registros en ese orden de
-volumen procedemos a calcular la *distancia de Cook* para saber si va a
-influenciar los modelos que se apliquen luego:
+el registrado (50.000m3). Pero es un outlier y al no haber más registros
+en ese orden de volumen sería imprudente hacer inferencias a ese nivel
+con tan poca información y, por lo tanto, se elimina.
+
+Para mejor visualización se muestra el histograma de tanques auditados
+en función del volumen.
+
+```{r}
+tanques |> 
+  ggplot(aes(x=volumen))+
+  geom_histogram()
+
+
+```
+
+```{r}
+#| include: false
+# Se elimnina ese outlier (id = 111)
+tanques <- tanques |> 
+  filter(!id %in% c("111"))
+```
+
+**DISTANCIA DE COOK**
+
+Se calcula la *distancia de Cook* para saber si algun dato va a
+influenciar los modelos.
 
 ```{r}
 #| echo: false
+
+# Se ordena la base de datos por id
+tanques <- tanques |> 
+  arrange(id)
+
 # Se realiza un modelo con ajuste lineal
 modelo <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
 
@@ -1036,39 +1102,53 @@ cooks <- cooks.distance(modelo)
 
 # Se muestra graficamente
 df_cooks <- data.frame(
-  id = 1:length(cooks),
+  id_cooks = 1:length(cooks),
   cooks = cooks
 )
 
-ggplot(df_cooks, aes(x = id, y = cooks)) +
+ggplot(df_cooks, aes(x = id_cooks, y = cooks)) +
   geom_point() +
   geom_text(
     data = subset(df_cooks, cooks == max(cooks)),
-    aes(label = id),
+    aes(label = id_cooks),
     vjust = -1, color = "red"
   )+
   coord_cartesian(clip = "off")
 ```
 
-Puede apreciarse que este registro (id = 111) no afectará
-significativamente el modelo, por lo que no se elimina.
-
-De la gráfica de *distancia de Cook* se observa un nuevo registro (id =
+De la gráfica de *distancia de Cook* se observa un registro (id_cooks =
 171) muy influyente (mayor a 1). Por lo que se procede a su revisión.
 
 ```{r}
 #| echo: false
-outlier_171 <- tanques |>
-  filter(id == "171") |> 
+
+# Las filas 56 y 60 tienen las máx dist. de cook
+id_max <- which.max(cooks)
+
+# Se observan esos registros
+tanques[c(56,60),]
+
+outlier_cook <- tanques |>
+  filter(id == id_max) |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
 
-outlier_171
+outlier_cook
 ```
 
-No pareciera haber nada extraño. Al realizar un modelo ajustado con las
-variables de construcción (volumen, altura, etc.) con y sin ese valor
-para ver como cambian los coeficientes se observa que no hay variación
-y, por lo tanto, no se modifica.
+El registro con id=140 indica 99 virolas cuando lo esperable para sus
+medidas es 9, por lo que se considera un typo y se modifica a 9.
+
+```{r}
+# Se modifica e_virolas para el registro con id=140
+tanques <- tanques |>
+  mutate(e_virolas = ifelse(id == 140, 9, e_virolas))
+
+```
+
+El registro con id=134 no presenta irregularidades observables. Al
+realizar un modelo ajustado con las variables de construcción (volumen,
+altura, etc.) con y sin ese valor para ver como cambian los coeficientes
+se observa que no hay variación y, por lo tanto, no se modifica.
 
 ```{r}
 #| eval: false
@@ -1076,7 +1156,7 @@ y, por lo tanto, no se modifica.
 
 # Modelos ajustados con y sin ese registro
 modelo_full <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
-modelo_sin <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques[tanques$id != "171", ])
+modelo_sin <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques[tanques$id != 134, ])
 
 # Comparación de modelos
 summary(modelo_full)
@@ -1102,13 +1182,13 @@ print(outlierTest(modelo))
 
 El resultado arroja que claramente estos dos registros son outliers
 estadísticamente significativos. Por lo que se procede a revisar esos
-registros (números de fila = 201 y 187) en busca de posibles errores.
+registros (números de fila = 102 y 123) en busca de posibles errores.
 
 ```{r}
 #| echo: false
 
 outliers <- tanques |> 
-  filter(row_number() %in% c(201,187)) |> 
+  filter(row_number() %in% c(102,123)) |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
 
 outliers
@@ -1125,6 +1205,8 @@ a 13000m3.
 tanques <- tanques |> 
   mutate(volumen = if_else(as.character(id) == "199", 13000, volumen))
 ```
+
+Sobre el registro con id = 232 no se observa nada en particular.
 
 ### Colinealidad
 
@@ -1150,9 +1232,9 @@ pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virol
 ```
 
 Vemos que aumentaron las correlaciones, ahora si el volumen y el
-diametro están fuertemente correlacionados (0.92), también lo estan el
+diametro están fuertemente correlacionados (0.95), también lo estan el
 diametro con la cantidad de virolas (0.83) y el volumen con la cantidad
-de virolas (0.75), todo lo cual tiene mucho sentido desde la física del
+de virolas (0.81), todo lo cual tiene mucho sentido desde la física del
 problema.
 
 **FACTOR DE INFLACIÓN DE LA VARIANZA (VIF)**
@@ -1192,8 +1274,8 @@ VIF
 ```
 
 Los valores son bajos (todos menores a 2.5) salvo con la variable
-`e_diametro`, pero igualmente se mantiene apenas por encima del umbral
-de 5 por lo que se considera una baja colinealidad.
+`e_diametro` que es de 9.8 por lo que se podría dejar afuera de los
+modelos a alguna de las dos si se presentan inconvenientes.
 
 ### Esbeltez
 
@@ -1216,6 +1298,78 @@ tanques <- tanques %>%
   )
 
 ```
+
+### Imputación NA
+
+A las **variables cualitativas** que poseian registros con valores
+faltantes (NA), se las transformó a factores y se les imputo la
+categoría de DESCONOCIDO.
+
+Con las **variables cuantitativas** se procede a imputar los valores de
+datos faltantes según el promedio de los registros agrupados de acuerdo
+a su variable más correlacionada.
+
+```{r}
+
+# Ranking NA en Base de datos al momento actual
+tanques |> 
+  summarise(across(everything(),
+                   ~ sum(is.na(.)))) |> 
+  pivot_longer(everything(),
+               names_to = "variable",
+               values_to = "faltantes")  |> 
+  arrange(desc(faltantes))
+```
+
+La variable `e_espesor1er_virola` es la que más cantidad de faltantes
+presenta. De la matriz de correlación se observa que la variable que se
+relaciona más fuertemente con ella de forma positiva (0.64) es la
+variable `e_altura`, por lo tanto, a esos valores faltantes se les
+imputa el valor promedio de los registros altura similares.
+
+```{r}
+# Se imputan los valores a e_espesor1er_virola según e_altura
+tanques <- tanques |> 
+  group_by(e_altura) |> 
+  mutate(e_espesor1er_virola = ifelse(is.na(e_espesor1er_virola),
+                          mean(e_espesor1er_virola, na.rm = TRUE),
+                          e_espesor1er_virola)) |> 
+  ungroup()
+```
+
+La cantidad de virolas (`e_virolas`) se correlaciona con `e_diametro`
+(0.83).
+
+```{r}
+# Se imputan los valores a e_virolas según e_diametro
+tanques <- tanques |> 
+  group_by(e_diametro) |> 
+  mutate(e_virolas = ifelse(is.na(e_virolas), 
+                            mean(e_virolas, na.rm = TRUE),
+                            e_virolas)) |> 
+  ungroup()
+```
+
+Sería imposible asignar un valor adecuado a `ano_montaje` por lo que no
+se imputan valores.
+
+Se revisa que hayan quedado correctamente imputados los NA.
+
+```{r}
+# Ranking NA en Base de datos luego de corregidos
+tanques |> 
+  summarise(across(everything(),
+                   ~ sum(is.na(.)))) |> 
+  pivot_longer(everything(),
+               names_to = "variable",
+               values_to = "faltantes")  |> 
+  arrange(desc(faltantes))
+```
+
+Se observan aun datos faltantes en las variables corregidas, eso puede
+deberse a la falta de registros similares para agrupar. Esos registros
+se dejan con NA para evitar imputaciones no adecuadas y no se
+consideraran en los modelos que utilicen esas variables.
 
 ## **3 - DATOS GEORREFERENCIADOS**
 
@@ -1940,7 +2094,7 @@ niveles de riesgo sísmico y resultados desfavorables de inspección,
 mientras que los tanques aptos tendieron a asociarse con estados
 operativos en servicio.
 
-### ACM mixto 
+### ACM mixto
 
 ```{r}
 library(tidyverse)
