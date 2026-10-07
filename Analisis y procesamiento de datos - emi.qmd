@@ -23,7 +23,26 @@ editor:
     wrap: 72
 ---
 
-## **1 - BASE DE DATOS**
+## **1 - INTRODUCCIÓN**
+
+### Objetivo general
+
+El objetivo general es evaluar daños y caracterizar la vulnerabilidad de
+tanques de almacenamiento y otras estructuras laminares típicas de la
+industria petrolera argentina bajo acciones de viento y fuego.
+
+### Preguntas
+
+El presente trabajo busca responder las siguientes preguntas:
+
+1.  ¿Cómo pueden caracterizarse los tanques incluidos en la base de
+    datos desde el punto de vista de dimensiones, tipos de techo,
+    ubicación, fluido?
+
+2.  ¿Es posible obtener alguna caracterización de los riegos mas
+    frecuentes?
+
+## **2 - BASE DE DATOS**
 
 Los datos sobre los tanques, objeto de análisis, se extrajeron de
 informes realizados durante los años 2015 al 2022, los cuales se
@@ -278,7 +297,7 @@ o aporte mayor claridad a la base de datos, de manera visual o
 descriptiva. En algunos casos, se adjuntan imágenes, croquis de
 ubicación y de geometrías.
 
-## **2 - EDA**
+## **3 - EDA**
 
 ANALISIS EXPLORATORIO DE DATOS
 
@@ -1371,7 +1390,7 @@ deberse a la falta de registros similares para agrupar. Esos registros
 se dejan con NA para evitar imputaciones no adecuadas y no se
 consideraran en los modelos que utilicen esas variables.
 
-## **3 - DATOS GEORREFERENCIADOS**
+## **4 - DATOS GEORREFERENCIADOS**
 
 La georreferenciación agrega una dimensión analítica muy importante al
 EDA porque permite incorporar el contexto espacial de cada tanque. Por
@@ -1440,7 +1459,7 @@ summary(tanques $long)
 
 ```
 
-### Ubicacion de los tanques segun sus coordenadas
+### Ubicacion de los tanques
 
 Todos los tanques observados objetos de estudio, se encuentran dentro de
 Argentino. A modo de corroboración los ubicamos según sus coordenadas
@@ -1513,7 +1532,10 @@ por lo tanto las consideraciones sísmicas son mas relevantes, mientras
 que si estado es FUERA DE SERVICIO, implica que el tanque esta vacío y
 por lo tanto las consideraciones de vientos son las mas relevantes.
 
-### Consideraciones respecto a nivel de riesgo por acción sísmica
+### Riesgo por sísmos
+
+Las consideraciones respecto a nivel de riesgo por acción sísimica se
+toma de la siguiente referencia.
 
 *(Fuente:
 <https://www.argentina.gob.ar/inpres/ingenieria-sismorresistente/zonificacion-sismica>,*
@@ -1555,20 +1577,23 @@ sísmicas.
 -Factor de riesgo de la construcción, el reglamento agrupa
 construcciones según las consecuencias de sus fallas.
 
-Puesto que no contamos con información respecto al suelo de fundación y
-que estamos analizando en su totalidad estructuras de tanques. Solo
-vamos a considerar la zonificación propuesta por el CIRSOC en el
-analisis.
+Puesto que no se cuenta con información respecto al suelo de fundación y
+que se analiza en su totalidad estructuras de tanques. Solo se considera
+la zonificación propuesta por el CIRSOC en el analisis.
 
 Para clasificar a cada tanque según la zona sísmica en la que se
-encuentra descargamos la capa SIG de riesgo sísmico publicada por el
+encuentra se descarga la capa SIG de riesgo sísmico publicada por el
 Ministerio de Defensa
 (<https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG>).
 
-Procedemos a integrarlas en la tabla de datos de tanques asociando cada
-coordenada con el respectivo poligono de zonificación.
+Luego se procede a integrarlas en la tabla de datos de tanques asociando
+cada coordenada con el respectivo poligono de zonificación y se vrifica
+en el mapa interactivo a que zona sismica pertenece cada tanque
+inventariado y su riesgo asociado.
 
 ```{r}
+#| include: false
+
 #Se carga la capa oficial de zonificacion sísmica SIG del Instituto Geográfico Nacional (IGN). El IGN publica estas capas en formato vectorial y en WGS84 / EPSG:4326 
 # Link: https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG
 
@@ -1591,13 +1616,6 @@ st_crs(zonas_cirsoc) #Tiene que ser EPSG:4326 para coincidir con tanque_sf
 zona_sismica <- zonas_cirsoc |> 
   select(c(zona_sismo,p_sismica,geometry))|> 
   rename(riesgo_sismico=p_sismica)
-```
-
-Se clasifica a cada tanque según su zona sísmica a partir de sus
-coordenadas.
-
-```{r}
-library(sf)
 
 #Asociar cada tanque a una zona sísmica, Como los tanques son puntos y las zonas son polígonos:
 
@@ -1607,12 +1625,7 @@ tanques<- st_join(
   join = st_intersects,
   left = TRUE
 )
-
-
 ```
-
-Verificamos en el mapa interactivo a que zona sismica pertenece cada
-tanque inventariado y su riesgo asociado.
 
 ```{r}
 library(leaflet)
@@ -1656,7 +1669,10 @@ leaflet(tanques) %>%
   )
 ```
 
-### Consideraciones respecto a nivel de riesgo por vientos
+### Riesgo por vientos
+
+Las consideraciones respecto a nivel de riesgo por vientos se toma de la
+siguiente referencia.
 
 *Fuente: (CIRSOC 102 edicion 2025 -*
 
@@ -1869,7 +1885,7 @@ leaflet(tanques) %>%
   )
 ```
 
-## **4 - MODELOS ESTADÍSTICOS**
+## **5 - MODELOS ESTADÍSTICOS**
 
 ```{r}
 #| include: false
@@ -1885,9 +1901,10 @@ write_xlsx(tanques_modelos, "tanques_modelo.xlsx")
 
 ### Variables cuantitativas para ACP
 
-Se realiza el Análisis de Componentes Principales (ACP) con las
-variables cuantitativas de interés eliminando los registros con valores
-faltantes.
+Debido a que no hay independencia entre las variables, sino que
+presentan cierto grado de correlación, se realiza el Análisis de
+Componentes Principales (ACP) con las variables cuantitativas de interés
+eliminando los registros con valores faltantes.
 
 La única variable no cuantitativa que no se considera es la variable
 `ano_montaje` ya que presenta valores faltantes que no pueden ser
@@ -2010,6 +2027,7 @@ Se muestran los individuos en el plano factorial para un analisis
 preliminar.
 
 ```{r}
+#| echo: false
 
 acp_datos <- tanques_modelos %>%
   drop_na(
@@ -2053,52 +2071,37 @@ también mucha superposición entre los individuos APTOS y NO APTOS, por
 lo que se concluye que ninguna de las variables cuantitativas ayudaría a
 clasificar los tanques entre APTOS y NO APTOS.
 
-### Variables cualitativas para ACM
+### ACM
 
-Se realiza el**Análisis de Correspondencias Múltiples (ACM)** con las
-variables cuantitativas de interés eliminando los registros con valores
-faltantes si los hubiera.
-
-Buscamos identificar asociaciones entre las categorías y detectar grupos
-de individuos con perfiles similares.
-
-Puesto que la zona sismica determina el riesgo sísmico, se descarta
-`zona_sismica` y ya que el viento de diseño fue considerado en el ACP se
-descarta `ciudad_cerca_viento.`
-
-A su vez, buscamos observar posibles asociasiones de tanques
-independientemente de la `empresa` que lo opera para enfocarnos a
-caracteristicas estructurales.
+Se realiza el Análisis de Correspondencias Multiples (ACM) con las
+variables cualitativas de interés eliminando los registros con valores
+faltantes.
 
 ```{r}
+#| include: false
+
+# Se seleccionan las variables a utilizar en el ACM y se eliminan los registros con valores faltantes
 tanques_acm <- tanques_modelos %>%
   select(
     estado,
     producto,
     tipo_de_techo,
+    medicion_de_asent_dif,
+    medicion_de_corrosion,
     resultado_informe,
-    riesgo_sismico,
+    ciudad_cercana_Viento,
+    zona_sismo.x,
+    riesgo_sismico.x
   ) %>%
   mutate(across(everything(), as.factor)) %>%
   drop_na()
-```
 
-Ejecutar el ACM
-
-```{r}
-acm <- MCA(
+# Se realiza el ACM
+modelo_acm <- MCA(
   tanques_acm,
   graph = FALSE
 )
-```
 
-Varianza explicada
-
-```{r}
-fviz_screeplot(
-  acm,
-  addlabels = TRUE
-)
 ```
 
 Se observa que las variables cualitativas no aportan de manera
@@ -2113,8 +2116,9 @@ Mapa de categorías
 
 ```{r}
 fviz_mca_var(
-  acm,
-  repel = TRUE
+  modelo_acm,
+  repel = TRUE,
+  alpha.var = "contrib"
 )
 ```
 
