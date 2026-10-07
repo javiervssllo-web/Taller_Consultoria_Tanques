@@ -1872,9 +1872,10 @@ leaflet(tanques) %>%
 ## **4 - MODELOS ESTADÍSTICOS**
 
 ```{r}
-tanques_modelos<-tanques
+#| include: false
 
-tanques_modelos<- st_drop_geometry(tanques_modelos)
+# Se pasa de un objeto SF a un Tibble
+tanques_modelos<- st_drop_geometry(tanques)
          
 library(writexl)
 
@@ -1882,34 +1883,26 @@ library(writexl)
 write_xlsx(tanques_modelos, "tanques_modelo.xlsx")
 ```
 
-Evaluamos datos faltantes en las variables a utilizar para el ACP y ACM
+### ACP
+
+Se realiza el Análisis de Componentes Principales (ACP) con las
+variables cuantitativas de interés eliminando los registros con valores
+faltantes.
+
+La única variable no cuantitativa que no se considera es la variable
+`ano_montaje` ya que presenta valores faltantes que no pueden ser
+recuperados y no es necesaria para el objeto de analisis.
 
 ```{r}
-tanques_modelos %>%
-  summarise(across(everything(), ~sum(is.na(.)))) %>%
-  pivot_longer(
-    everything(),
-    names_to = "variable",
-    values_to = "NA"
-  ) %>%
-  arrange(desc(NA))
-```
+#| include: false
 
-Se decide hacer imputacion por mediana usando libreria FactorMineR
-
-```{r}
 library(FactoMineR)
 library(factoextra)
 
-```
-
-### Variables numéricas para ACP
-
-```{r}
-tanques_acp <- tanques_modelos %>%
+# Se seleccionan las variables a utilizar en el ACP
+tanques_acp <- tanques_modelos |> 
   select(
     volumen,
-    ano_montaje,
     e_virolas,
     e_altura,
     e_diametro,
@@ -1917,55 +1910,107 @@ tanques_acp <- tanques_modelos %>%
     e_espesor1er_virola,
     viento_cat_III_ms
   )
-#eliminar registro incompletos
-tanques_acp <- tanques_acp %>%
+# Se eliminan los registro incompletos
+tanques_acp <- tanques_acp  |> 
   drop_na()
-
 ```
 
-Se ejecuta el ACP
+**Rango de las variables**
+
+Se observan los rangos de las variables para definir si se estandarizan
+para el análisis.
 
 ```{r}
-library(FactoMineR)
-library(factoextra)
+#| echo: false
 
-acp <- PCA(
+# Revisión del rango de las variables para definir si se estandarizan o no
+sapply(tanques_acp,range)
+boxplot(tanques_acp, main="Diagramas de Caja")
+```
+
+Se observa que la variable volumen tiene un rango muy superior al resto
+por lo que se realiza el escalado de las variables al generar el modelo
+para trabajar con un ACP normado.
+
+```{r}
+#| include: false
+
+# Se genera el modelo acp
+modelo_acp <- PCA(
   tanques_acp,
   scale.unit = TRUE,
   graph = FALSE
 )
 ```
 
-Grafico de varianza explicada
+**Varianza explicada**
+
+Una vez generado el ACP se evalua la cantidad de componentes principales
+a mantener.
 
 ```{r}
 fviz_eig(
-  acp,
+  modelo_acp,
   addlabels = TRUE,
   barfill = "steelblue"
 )
+
+# Se obtienen los autovalores del modelo acp
+get_eig(modelo_acp)
 ```
 
-- PC1 = dirección principal de variabilidad.
+Si se utiliza el **criterio de ladera** (donde se encuentra el “codo” de
+la gráfica) se podrían tomar hasta **3 componentes** que explicarían el
+88.07% de la variabilidad.
 
-- PC2 = segunda dirección independiente.
+Utilizando el **criterio de Kaiser** (𝜆 \> 1) se tomarían solo **2
+componentes**. que explicarían el 75.52% de la variabilidad.
 
-Buscar que PC1+PC2 expliquen al menos 50-60%.
+Si se aplica el **criterio del bastón roto** se tomarían también **2
+componentes**.
 
-### Variables del ACP
+```{r}
+#| echo: false
+
+# Criterio del bastón roto
+p <- ncol(tanques_acp)
+broken_stick <- sapply(1:p, function(k) sum(1/(k:p))/p)
+round(broken_stick,4)
+round(acp$eig[,1]/sum(acp$eig[,1]),4)
+```
+
+Finalmente, una vez evaluados los diferentes criterios, se decide
+mantener los primeros **2 componentes** principales que explican el
+75.52% de la variabilidad.
+
+**Analisis de las Variables del ACP**
+
+Se muestran las variables en el plano factorial para un analisis
+preliminar.
 
 ```{r}
 fviz_pca_var(
-  acp,
+  modelo_acp,
   col.var = "cos2",
   gradient.cols = c("lightblue","blue","red"),
   repel = TRUE
 )
 ```
 
-Individuos
+De la grafica se observan las siguientes características:
+
+- `e_espesor1er_virola`, `e_diametro` y `volumen` están muy
+  correlacionadas.
+
+- `e_altura` y `e_virolas` también están muy correlacionadas entre sí.
+
+**Analisis de los Individuos del ACP**
+
+Se muestran los individuos en el plano factorial para un analisis
+preliminar.
 
 ```{r}
+
 acp_datos <- tanques_modelos %>%
   drop_na(
     volumen,
@@ -1998,9 +2043,15 @@ fviz_pca_ind(
   acp,
   habillage = acp_datos$resultado_informe,
   addEllipses = TRUE,
-  repel = TRUE
+  repel = TRUE,
+  label = FALSE
 )
 ```
+
+Se observa una gran dispersión con centro en el plano factorial y
+también mucha superposición entre los individuos APTOS y NO APTOS, por
+lo que se concluye que ninguna de las variables cuantitativas ayudaría a
+clasificar los tanques entre APTOS y NO APTOS.
 
 ### Variables categóricas para el ACM
 
