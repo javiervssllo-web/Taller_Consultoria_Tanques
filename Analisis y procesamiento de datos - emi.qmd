@@ -1883,7 +1883,7 @@ library(writexl)
 write_xlsx(tanques_modelos, "tanques_modelo.xlsx")
 ```
 
-### ACP
+### Variables cuantitativas para ACP
 
 Se realiza el Análisis de Componentes Principales (ACP) con las
 variables cuantitativas de interés eliminando los registros con valores
@@ -1976,7 +1976,7 @@ componentes**.
 p <- ncol(tanques_acp)
 broken_stick <- sapply(1:p, function(k) sum(1/(k:p))/p)
 round(broken_stick,4)
-round(acp$eig[,1]/sum(acp$eig[,1]),4)
+round(modelo_acp$eig[,1]/sum(modelo_acp$eig[,1]),4)
 ```
 
 Finalmente, una vez evaluados los diferentes criterios, se decide
@@ -2053,19 +2053,31 @@ también mucha superposición entre los individuos APTOS y NO APTOS, por
 lo que se concluye que ninguna de las variables cuantitativas ayudaría a
 clasificar los tanques entre APTOS y NO APTOS.
 
-### Variables categóricas para el ACM
+### Variables cualitativas para ACM
+
+Se realiza el**Análisis de Correspondencias Múltiples (ACM)** con las
+variables cuantitativas de interés eliminando los registros con valores
+faltantes si los hubiera.
+
+Buscamos identificar asociaciones entre las categorías y detectar grupos
+de individuos con perfiles similares.
+
+Puesto que la zona sismica determina el riesgo sísmico, se descarta
+`zona_sismica` y ya que el viento de diseño fue considerado en el ACP se
+descarta `ciudad_cerca_viento.`
+
+A su vez, buscamos observar posibles asociasiones de tanques
+independientemente de la `empresa` que lo opera para enfocarnos a
+caracteristicas estructurales.
 
 ```{r}
 tanques_acm <- tanques_modelos %>%
   select(
     estado,
     producto,
-    empresa,
     tipo_de_techo,
     resultado_informe,
-    zona_sismo,
     riesgo_sismico,
-    ciudad_cercana_Viento
   ) %>%
   mutate(across(everything(), as.factor)) %>%
   drop_na()
@@ -2089,6 +2101,14 @@ fviz_screeplot(
 )
 ```
 
+Se observa que las variables cualitativas no aportan de manera
+significativa para explicar la variabilidad de los tanques. Considerar
+las 5 primeras comoponentes principales no logran explicar más de 35% de
+la inercia total. En un ACM es habitual que variabilidad se disperse
+entre muchas dimensiones e implica que las relaciones entre las
+categorías son complejas y no pueden resumirse completamente en pocas
+dimensiones.
+
 Mapa de categorías
 
 ```{r}
@@ -2098,52 +2118,39 @@ fviz_mca_var(
 )
 ```
 
-Individuos
+Contribuciones de las categorias en las dimensiones 1:
 
 ```{r}
-fviz_mca_ind(
+fviz_contrib(
   acm,
-  habillage = tanques_acm$resultado_informe,
-  addEllipses = TRUE,
-  repel = TRUE
+  choice = "var",
+  axes = 1,
+  top = 10
 )
 ```
 
-Grafico combinado
+Contribuciones de las categorias en las dimensiones 2:
 
 ```{r}
-tanques_acm2 <- tanques_modelos %>%
-  select(
-    resultado_informe,
-    estado,
-    zona_sismo,
-    riesgo_sismico,
-    producto
-  ) %>%
-  mutate(across(everything(), as.factor)) %>%
-  drop_na()
-
-acm2 <- MCA(tanques_acm2, graph = FALSE)
-
-fviz_mca_biplot(
-  acm2,
-  repel = TRUE,
-  ggtheme = theme_minimal()
+fviz_contrib(
+  acm,
+  choice = "var",
+  axes = 2,
+  top = 10
 )
 ```
 
-El ACP mostró que las dimensiones geométricas del tanque (altura,
-diámetro y volumen) explican la mayor parte de la variabilidad
-estructural. Las dos primeras componentes explicaron aproximadamente la
-mayor proporción de la variabilidad total, permitiendo representar
-adecuadamente los tanques en un espacio bidimensional.
-
-El ACM evidenció asociaciones entre el estado operacional, el resultado
-de las inspecciones y las características de emplazamiento. Se
-observaron agrupamientos entre categorías relacionadas con mayores
-niveles de riesgo sísmico y resultados desfavorables de inspección,
-mientras que los tanques aptos tendieron a asociarse con estados
-operativos en servicio.
+El Análisis de Correspondencias Múltiples permitie identificar dos
+estructuras principales en los datos. La primera dimensión esta dominada
+por las categorías de riesgo sísmico, separando emplazamientos de baja
+peligrosidad de aquellos asociados a mayores niveles de amenaza sísmica.
+La segunda dimensión esta relacionada principalmente con el estado
+operativo y el resultado de las inspecciones, diferenciando tanques
+aptos y en servicio de aquellos clasificados como no aptos o fuera de
+servicio. Asimismo, se observa una proximidad entre las categorías "No
+apto", "Fuera de servicio" y niveles elevados de riesgo sísmico,
+sugiriendo una asociación entre estas características dentro de la
+población analizada.
 
 ### ACM mixto
 
@@ -2153,19 +2160,17 @@ library(tidyverse)
 tanques_famd <- tanques_modelos %>%
   select(
     volumen,
-    ano_montaje,
+    e_virolas,
     e_altura,
     e_diametro,
     esbeltez,
     e_espesor1er_virola,
     viento_cat_III_ms,
     estado,
-    empresa,
     producto,
     tipo_de_techo,
     resultado_informe,
-    zona_sismo,
-    riesgo_sismico
+    riesgo_sismico,
   ) %>%
   drop_na()
 ```
@@ -2201,17 +2206,6 @@ fviz_famd_var(
 )
 ```
 
-Grafico
-
-```{r}
-fviz_famd_ind(
-  famd,
-  habillage = tanques_famd$resultado_informe,
-  addEllipses = TRUE,
-  repel = TRUE
-)
-```
-
 Clustering de tanques:
 
 ```{r}
@@ -2231,12 +2225,5 @@ Vizualizar
 fviz_cluster(
   clusters,
   data = famd$ind$coord[,1:5]
-)
-```
-
-```{r}
-fviz_famd(
-  famd,
-  repel = TRUE
 )
 ```
