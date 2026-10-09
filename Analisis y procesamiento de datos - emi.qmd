@@ -39,7 +39,7 @@ El presente trabajo busca responder las siguientes preguntas:
     datos desde el punto de vista de dimensiones, tipos de techo,
     ubicación, fluido?
 
-2.  ¿Es posible obtener alguna caracterización de los riegos mas
+2.  ¿Es posible obtener alguna caracterización de los riesgos mas
     frecuentes?
 
 ## **2 - BASE DE DATOS**
@@ -2071,37 +2071,52 @@ también mucha superposición entre los individuos APTOS y NO APTOS, por
 lo que se concluye que ninguna de las variables cuantitativas ayudaría a
 clasificar los tanques entre APTOS y NO APTOS.
 
-### ACM
+### **Variables cualitativas para ACM**
 
-Se realiza el Análisis de Correspondencias Multiples (ACM) con las
-variables cualitativas de interés eliminando los registros con valores
-faltantes.
+Se realiza el Análisis de Correspondencias Múltiples (ACM) con las
+variables cuantitativas de interés eliminando los registros con valores
+faltantes si los hubiera.
+
+Buscamos identificar asociaciones entre las categorías y detectar grupos
+de individuos con perfiles similares.
+
+Puesto que la zona sismica determina el riesgo sísmico, se descarta
+`zona_sismica` y ya que el viento de diseño fue considerado en el ACP se
+descarta `ciudad_cerca_viento.`
+
+A su vez, buscamos observar posibles asociasiones de tanques
+independientemente de la `empresa` que lo opera para enfocarnos a
+caracteristicas estructurales.
 
 ```{r}
-#| include: false
-
-# Se seleccionan las variables a utilizar en el ACM y se eliminan los registros con valores faltantes
 tanques_acm <- tanques_modelos %>%
   select(
     estado,
     producto,
     tipo_de_techo,
-    medicion_de_asent_dif,
-    medicion_de_corrosion,
     resultado_informe,
-    ciudad_cercana_Viento,
-    zona_sismo.x,
-    riesgo_sismico.x
+    riesgo_sismico,
   ) %>%
   mutate(across(everything(), as.factor)) %>%
   drop_na()
+```
 
-# Se realiza el ACM
-modelo_acm <- MCA(
+Ejecutar el ACM
+
+```{r}
+acm <- MCA(
   tanques_acm,
   graph = FALSE
 )
+```
 
+Varianza explicada
+
+```{r}
+fviz_screeplot(
+  acm,
+  addlabels = TRUE
+)
 ```
 
 Se observa que las variables cualitativas no aportan de manera
@@ -2116,9 +2131,8 @@ Mapa de categorías
 
 ```{r}
 fviz_mca_var(
-  modelo_acm,
-  repel = TRUE,
-  alpha.var = "contrib"
+  acm,
+  repel = TRUE
 )
 ```
 
@@ -2151,12 +2165,12 @@ peligrosidad de aquellos asociados a mayores niveles de amenaza sísmica.
 La segunda dimensión esta relacionada principalmente con el estado
 operativo y el resultado de las inspecciones, diferenciando tanques
 aptos y en servicio de aquellos clasificados como no aptos o fuera de
-servicio. Asimismo, se observa una proximidad entre las categorías "No
-apto", "Fuera de servicio" y niveles elevados de riesgo sísmico,
+servicio. Asimismo, se observa una proximidad entre las categorías “No
+apto”, “Fuera de servicio” y niveles elevados de riesgo sísmico,
 sugiriendo una asociación entre estas características dentro de la
 población analizada.
 
-### ACM mixto
+### **ACM mixto**
 
 ```{r}
 library(tidyverse)
