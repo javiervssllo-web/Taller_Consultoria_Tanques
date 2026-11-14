@@ -1,6 +1,6 @@
 ---
 title: "Daños y vulnerabilidad de estructuras laminares bajo acciones extremas en  infraestructura de almacenamiento y proceso"
-author: "Matias Nestacio - Emiliano Estrada - Javier Vassallo"
+author: "Matias Nestasio - Emiliano Estrada - Javier Vassallo"
 date: today
 date-format: "D [de] MMMM [de] YYYY"
 
@@ -2172,76 +2172,384 @@ población analizada.
 
 ### **ACM mixto**
 
-```{r}
-library(tidyverse)
+### Análisis de clustering y evaluación de la influencia de las condiciones de Viento
 
-tanques_famd <- tanques_modelos %>%
+Con el propósito de identificar perfiles de tanques con características
+similares y explorar posibles patrones asociados al riesgo de viento, se
+propone desarrollar un análisis de clustering considerando las
+características geométricas, constructivas y operativas de los tanques
+relevados, es decir, todas las variables cuantitativas y cualitativas
+relevadas.
+
+En particular, se evaluará la influencia de la variable
+`viento_cat_III_ms`, que representa la velocidad básica de viento de
+referencia establecida por el reglamento CIRSOC 102-2025, asignada a
+cada tanque según la ciudad geográficamente más cercana a su
+emplazamiento.
+
+Para ello, se desarrollarán dos modelos de clustering:
+
+**Modelo A1: clustering con inclusión de la variable de viento.**
+
+Se incorporará la velocidad básica de viento como variable cuantitativa,
+junto con las características geométricas, constructivas y operativas de
+los tanques. Este modelo permitirá identificar perfiles que contemplen
+tanto las particularidades de cada estructura como las condiciones
+geográficas de diseño.
+
+**Modelo A2: clustering sin inclusión de la variable de viento.**
+
+Se realizará un segundo análisis excluyendo dicha variable, manteniendo
+las restantes características. El objetivo será identificar perfiles
+constructivos y operativos sin incorporar explícitamente la condición
+geográfica asociada al viento.
+
+En ambos modelos se utilizarán procedimientos de clustering para datos
+mixtos y se evaluará la calidad de las agrupaciones mediante índices de
+validación, particularmente el coeficiente Silhouette. Asimismo, se
+analizará la composición y estabilidad de los grupos obtenidos.
+
+Finalmente, se compararán ambos resultados para determinar en qué medida
+la incorporación de la variable de viento modifica la conformación de
+los conglomerados. Esta comparación permitirá evaluar la influencia de
+las condiciones geográficas de diseño en la identificación de perfiles
+de tanques.
+
+```{r}
+# Variables comunes a ambos modelos
+variables_base <- c(
+  "volumen",
+  "e_virolas",
+  "e_altura",
+  "e_diametro",
+  "e_espesor1er_virola",
+  "estado",
+  "producto",
+  "tipo_de_techo"
+)
+
+# Modelo A1: incluye velocidad de viento
+datos_A1 <- tanques_modelos %>%
+  select(all_of(c(
+    variables_base,
+    "viento_cat_III_ms"
+  )))
+
+# Modelo A2: excluye velocidad de viento
+datos_A2 <- tanques_modelos %>%
+  select(all_of(variables_base))
+```
+
+```{r}
+# Cargar paquetes
+library(dplyr)
+library(cluster)
+library(factoextra)
+library(purrr)
+
+# Distancias de Gower
+dist_A1 <- daisy(
+  datos_A1,
+  metric = "gower"
+)
+
+dist_A2 <- daisy(
+  datos_A2,
+  metric = "gower"
+)
+```
+
+Se compara de 2 a 6 grupos.
+
+```{r}
+evaluar_k <- function(distancia, k_max = 6) {
+  
+  resultados <- map_dfr(2:k_max, function(k) {
+    
+    modelo <- pam(
+      distancia,
+      k = k,
+      diss = TRUE
+    )
+    
+    sil <- silhouette(
+      modelo$clustering,
+      distancia
+    )
+    
+    tibble(
+      k = k,
+      silhouette = mean(sil[, "sil_width"])
+    )
+  })
+  
+  return(resultados)
+}
+
+# Evaluar ambos modelos
+eval_A1 <- evaluar_k(dist_A1)
+eval_A2 <- evaluar_k(dist_A2)
+
+eval_A1
+eval_A2
+```
+
+Comparamos índice Silhouette
+
+```{r}
+ggplot(eval_A1, aes(x = k, y = silhouette)) +
+  geom_line() +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 2:6) +
+  labs(
+    title = "Selección de clusters - Modelo A1",
+    subtitle = "Gower + PAM con variable de viento",
+    x = "Número de clusters",
+    y = "Silhouette promedio"
+  ) +
+  theme_minimal()
+
+ggplot(eval_A2, aes(x = k, y = silhouette)) +
+  geom_line() +
+  geom_point(size = 3) +
+  scale_x_continuous(breaks = 2:6) +
+  labs(
+    title = "Selección de clusters - Modelo A2",
+    subtitle = "Gower + PAM sin variable de viento",
+    x = "Número de clusters",
+    y = "Silhouette promedio"
+  ) +
+  theme_minimal()
+```
+
+Los gráficos muestran un comportamiento bastante consistente entre los
+dos modelos: **ambos identifican que la solución de dos clusters es la
+que presenta el mejor coeficiente Silhouette**. Sin embargo, los valores
+obtenidos son relativamente bajos.
+
+Respecto al modelo A1, La solución de dos grupos presenta el mejor
+resultado y al pasar de dos a tres clusters, la calidad de agrupación
+cae considerablemente. A partir de cuatro grupos hay una recuperación
+gradual, pero no se alcanza el valor inicial. Esto sugiere que dividir
+los datos en tres o más grupos produce conglomerados menos cohesionados
+o menos diferenciados.
+
+Respecto al modelo A2, nuevamente, dos clusters obtiene el mayor
+Silhouette. La solución de seis grupos presenta una recuperación
+importante, sin embargo, no supera la solución de dos grupos.
+
+Es interesante que, al excluir la variable de viento, la solución de
+seis grupos mejora respecto de las alternativas intermedias, aunque
+sigue siendo inferior a k = 2.
+
+**Una posible hipótesis es que la incorporación de la variable de viento
+produce una mejora muy leve en la calidad de la agrupación, pero no
+modifica la cantidad de clusters que resulta preferible según
+Silhouette.**
+
+No podemos afirmar todavía que el viento tenga una influencia importante
+en la conformación de los grupos.
+
+Los dos modelos tienen Silhouette inferior a 0,30. Esto indica que la
+estructura de agrupamiento es débil, ya que existe cierta tendencia a
+formar dos grupos, pero las observaciones no presentan una separación
+muy marcada. Es decir, esto significa que debemos evitar presentar los
+dos conglomerados como perfiles claramente diferenciados.
+
+Ajustamos los modelo a k=2
+
+```{r}
+modelo_A1 <- pam(
+  dist_A1,
+  k = 2,
+  diss = TRUE
+)
+
+modelo_A2 <- pam(
+  dist_A2,
+  k = 2,
+  diss = TRUE
+)
+
+# Modelo A1
+table(modelo_A1$clustering)
+
+# Modelo A2
+table(modelo_A2$clustering)
+library(dplyr)
+
+```
+
+Se observan diferencias en la composición de los clusters cuando la
+variable Vientos está presente. A continuación analizaremos la
+relevancia de dicha diferencia.
+
+```{r}
+table(
+  A1 = modelo_A1$clustering,
+  A2 = modelo_A2$clustering
+)
+
+library(mclust)
+mclust::adjustedRandIndex(
+  modelo_A1$clustering,
+  modelo_A2$clustering
+)
+```
+
+El Adjusted Rand Index (ARI) mide la similitud entre dos particiones,
+ajustando la coincidencia esperada por azar. Un ARI de 0,4509 indica una
+concordancia parcial entre los modelos, pero también evidencia que la
+incorporación de la variable de viento modifica la estructura de
+agrupamiento.
+
+Se observa que la incorporación de la variable de viento modifica la
+composición de los conglomerados, aunque ambos modelos conservan una
+estructura parcialmente similar.
+
+Hay tres resultados relevantes:
+
+1.  Ambos modelos seleccionaron dos clusters como solución preferible
+    según Silhouette.
+
+2.  La calidad de agrupamiento es ligeramente superior en A1 (0,280
+    frente a 0,265).
+
+3.  La incorporación del viento modifica la asignación de 40 tanques y
+    genera una concordancia moderada entre las particiones.
+
+Una posible interpretación es que la variable de viento introduce
+información que modifica algunos perfiles, pero no transforma
+completamente la estructura general de los grupos.
+
+### Caracterizamos los clusters
+
+```{r}
+datos_perfiles <- tanques_modelos %>%
+  mutate(
+    cluster_A1 = factor(modelo_A1$clustering),
+    cluster_A2 = factor(modelo_A2$clustering)
+  )
+```
+
+Compararemos las variables geométricas para A1
+
+```{r}
+datos_perfiles %>%
+  group_by(cluster_A1) %>%
+  summarise(
+    n = n(),
+    volumen = median(volumen, na.rm = TRUE),
+    altura = median(e_altura, na.rm = TRUE),
+    diametro = median(e_diametro, na.rm = TRUE),
+    virolas = median(e_virolas, na.rm = TRUE),
+    espesor = median(
+      e_espesor1er_virola,
+      na.rm = TRUE
+    ),
+    viento = median(
+      viento_cat_III_ms,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+```
+
+Y luego para A2,
+
+```{r}
+datos_perfiles %>%
+  group_by(cluster_A2) %>%
+  summarise(
+    n = n(),
+    volumen = median(volumen, na.rm = TRUE),
+    altura = median(e_altura, na.rm = TRUE),
+    diametro = median(e_diametro, na.rm = TRUE),
+    virolas = median(e_virolas, na.rm = TRUE),
+    espesor = median(
+      e_espesor1er_virola,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  )
+```
+
+Comparación gráfica
+
+```{r}
+library(tidyr)
+library(ggplot2)
+
+datos_perfiles %>%
   select(
+    cluster_A1,
     volumen,
-    e_virolas,
     e_altura,
     e_diametro,
-    esbeltez,
-    e_espesor1er_virola,
-    viento_cat_III_ms,
-    estado,
-    producto,
-    tipo_de_techo,
-    resultado_informe,
-    riesgo_sismico,
+    e_virolas,
+    e_espesor1er_virola
   ) %>%
-  drop_na()
+  pivot_longer(
+    cols = -cluster_A1,
+    names_to = "variable",
+    values_to = "valor"
+  ) %>%
+  ggplot(
+    aes(x = cluster_A1, y = valor, fill = cluster_A1)
+  ) +
+  geom_boxplot(alpha = 0.7) +
+  facet_wrap(~variable, scales = "free_y") +
+  labs(
+    title = "Características constructivas por conglomerado",
+    subtitle = "Modelo A1 - Con variable de viento",
+    x = "Cluster",
+    y = "Valor"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
-FAMD
+Se observa que los dos modelos están identificando esencialmente dos
+perfiles constructivos de tanques: uno de mayor capacidad y dimensiones
+y otro de menor capacidad y dimensiones.
 
-```{r}
-library(FactoMineR)
-library(factoextra)
+### Conclusiones sobre modelo mixto
 
-famd <- FAMD(
-  tanques_famd,
-  graph = FALSE
-)
-```
+La aplicación de técnicas de clustering sobre los registros permitió
+identificar dos perfiles exploratorios de tanques de almacenamiento,
+diferenciados principalmente por sus características geométricas y
+constructivas. El primero reúne tanques de mayor capacidad, diámetro,
+altura y espesor de la primera virola, mientras que el segundo concentra
+tanques de dimensiones y capacidades menores.
 
-Varianza explicada
+Con el propósito de evaluar la influencia de las condiciones de
+exposición al viento en la conformación de estos perfiles, se compararon
+dos modelos: uno que incorporó la velocidad básica de viento de
+referencia establecida por el CIRSOC 102-2025 y otro que excluyó dicha
+variable.
 
-```{r}
-fviz_screeplot(
-  famd,
-  addlabels = TRUE,
-  ylim = c(0,40)
-)
-```
+Ambos modelos identificaron dos conglomerados y presentaron resultados
+similares en cuanto a las características constructivas que distinguen a
+los grupos. Sin embargo, la comparación de las asignaciones evidenció
+modificaciones en la composición de los conglomerados, con 40
+observaciones que cambiaron de grupo. El índice Adjusted Rand fue de
+0,4509, indicando una concordancia parcial entre ambas particiones.
 
-variables importantes
+En cuanto a la calidad del agrupamiento, el modelo que incorporó la
+variable de viento obtuvo un coeficiente Silhouette de 0,280, frente a
+0,265 del modelo que la excluyó. Esta diferencia representa una mejora
+leve, por lo que no puede considerarse que la incorporación de dicha
+variable produzca una mejora sustancial en la separación de los grupos.
 
-```{r}
-fviz_famd_var(
-  famd,
-  repel = TRUE
-)
-```
+En consecuencia, los resultados sugieren que las características
+geométricas y constructivas constituyen los principales elementos
+diferenciadores de los perfiles identificados. La variable de viento
+aporta información adicional que modifica parcialmente la asignación de
+las observaciones, aunque no altera la estructura general de los
+perfiles.
 
-Clustering de tanques:
-
-```{r}
-set.seed(123)
-
-clusters <- kmeans(
-  famd$ind$coord[,1:5],
-  centers = 3
-)
-
-tanques_famd$cluster <- as.factor(clusters$cluster)
-```
-
-Vizualizar
-
-```{r}
-fviz_cluster(
-  clusters,
-  data = famd$ind$coord[,1:5]
-)
-```
+Finalmente, los conglomerados obtenidos deben interpretarse como una
+clasificación exploratoria de los tanques, útil para reconocer
+tipologías constructivas y analizar semejanzas entre sus
+características, sin que ello implique una separación estadística fuerte
+entre los grupos.
