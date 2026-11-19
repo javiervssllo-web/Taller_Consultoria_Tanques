@@ -54,7 +54,7 @@ de auditorías ambientales, de seguridad, de asentamiento, de abandono de
 uso de tanques o de reparación, involucran variables ambientales, que
 tratan, el entorno del tanque y/o la infraestructura existente en los
 alrededores. El criterio de inclusión de los tanques en la base de datos
-es que sul volumen sea mayor o igual a 500m3, priorizando aquellos
+es que su volumen sea mayor o igual a 500m3, priorizando aquellos
 tanques, que, por su escala operativa, representan un mayor riesgo
 potencial y mayor probabilidad de daños.
 
@@ -331,10 +331,86 @@ tipos de variables y datos faltantes.
 
 ```{r}
 print(tanques)
+
+summary(tanques)
 ```
 
 Son 263 individuos (tanques) a los que se les observaron 27 variables. A
-priori se estima que hay muchos valores faltantes.
+priori se estima que hay muchos valores faltantes. Desde el punto de
+vista de ingeniería, el volumen de los tanques es una de las variables
+más representativas para visualizar las dimensiones estructurales por lo
+que proponemos un histograma como acercamiento inicial al tema:
+
+```{r}
+library(tidyverse)
+
+ggplot(tanques, aes(x = volumen)) +
+  geom_histogram(
+    bins = 30,
+    fill = "steelblue",
+    color = "black",
+    alpha = 0.8
+  ) +
+  geom_vline(
+    aes(xintercept = median(volumen, na.rm = TRUE)),
+    color = "red",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Distribución de los volúmenes de almacenamiento",
+    subtitle = "Tanques auditados entre 2015 y 2022",
+    x = "Volumen [m³]",
+    y = "Cantidad de tanques"
+  ) +
+  theme_minimal()
+```
+
+La distribución presenta una fuerte asimetría positiva, concentrándose
+la mayoría de los tanques en capacidades bajas y medias. Los tanques de
+gran volumen constituyen una proporción reducida de la muestra, aunque
+poseen mayor relevancia desde el punto de vista de las consecuencias
+potenciales ante una falla estructural.
+
+La mediana indicada con la línea vertical roja es igual a 2000 metros
+cúbicos.
+
+Luego, cada registro representa un informe técnico, por lo que
+visualizamos los resultados que se obtuvieron:
+
+```{r}
+tanques %>%
+  count(resultado_informe) %>%
+  mutate(
+    porcentaje = round(100*n/sum(n),1)
+  ) %>%
+  ggplot(aes(
+    x = reorder(resultado_informe,n),
+    y = porcentaje,
+    fill = resultado_informe
+  )) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  geom_text(aes(label = paste0(porcentaje,"%")),
+            hjust = -0.1) +
+  labs(
+    title = "Distribución porcentual del resultado de auditoría",
+    x = "",
+    y = "% de tanques"
+  ) +
+  theme_minimal()
+```
+
+Es de notar que solo el 53% de los tanques relevados se clasificaron
+como aptos, lo que da un primer indicador del estado general de la
+infraestructura relevada, poniendo en contexto que se trata de
+estructuras críticas cuya falla puede tener consecuencias ambientales,
+economicas y sociales severas.
+
+Además puede ser una variable de interés para aplicar métodos de
+clasificación en función de otras variables.
+
+Previo a profundizar en otras caracterizaciones procedemos con la
+limpieza y ordenamiento de datos.
 
 ### Valores faltantes (var)
 
@@ -464,7 +540,7 @@ Descartamos las siguientes variables del análisis:
 
 - `archivo_doc`, `adjuntos` y `tipoinforme` por el hecho de que este
   estudio se centra unicamente en las propiedades físicas de los tanques
-  y estas variables no aportan información utlizable.
+  y estas variables no aportan información utilizable.
 
 ```{r}
 #| include: false
@@ -740,6 +816,8 @@ tanques <- tanques |>
     producto = na_if(producto, "NA"),
     producto = as.factor(producto)
   )
+
+
 ```
 
 Finalmente podemos ver el ranking de productos almacenados:
@@ -749,7 +827,25 @@ Finalmente podemos ver el ranking de productos almacenados:
 # Quedaron 11 valores unicos
 tanques |> 
   count(producto, sort = TRUE)
+
+ggplot(tanques,
+       aes(x = fct_infreq(producto),
+           fill = producto)) +
+  geom_bar(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Productos almacenados",
+    x = "",
+    y = "Cantidad de tanques"
+  ) +
+  theme_minimal()
 ```
+
+Los productos más representados corresponden a petróleo, mezclas de
+petróleo y agua, agua de formación y combustibles derivados. Esta
+diversidad implica distintos escenarios de riesgo asociados tanto a las
+cargas estructurales como a la peligrosidad frente a incendios o
+derrames.
 
 También se debe corregir la variable `empresa` ya que por falta de
 criterios de estandarización en la toma de datos tiene muchos valores
@@ -974,9 +1070,9 @@ outliers |>
 Se observa que hay 5 registros cuyo volumen esperado según el cálculo
 matemático es correcto por lo que se mantienen en el registro sin
 cambios. Solo un registro (id = 246) es inconsistente y se debe a un
-typo en el diametro (no existen tanques de 1828m de diametro) pero si se
-corrige a 18.28 el nuevo valor de volumen calculado matematicamente
-(3202) sigue siendo muy diferente al registrado (29651).
+potencial error de tipeo en el diámetro (no existen tanques de 1828m de
+diámetro) pero si se corrige a 18.28 el nuevo valor de volumen calculado
+matematicamente (3202) sigue siendo muy diferente al registrado (29651).
 
 Debido a que no se puede identificar correctamente el error pero se sabe
 con certeza su existencia, se procede a eliminar el registro con id=246.
@@ -986,6 +1082,18 @@ con certeza su existencia, se procede a eliminar el registro con id=246.
 tanques <- tanques |> 
   filter(id != "246")
 ```
+
+Como respaldo de la decisión se verifica visualmente que no existen
+tanques de diámetros mayores a 50 metros para las coordenadas indicadas
+en el registro id 246.
+
+![Imágen satelital de tanque id 246 (Bahía Blanca, Buenos
+Aires)](images/Outlier%20diametro.png){width="367"}
+
+El volumen de un tanque de 50 metros de diámetros y 12.2 metros de
+altura es aproximadamente 23954 metros cúbicos, valor aún inconsistente
+con el registrado. La eliminación del registro sigue siendo la opción
+más adecuada.
 
 **ALTURA** (`e_altura`)
 
@@ -1015,10 +1123,10 @@ tanques |>
   coord_cartesian(clip = "off")
 ```
 
-Se observan 2 outliers superiore a analizar. Ambos son a priori typos
-porque no son valores de construcción reales, son muy elevados. Vemos
-los registros (calculando el volumen matemáticamente) para analizar con
-mayor detalle:
+Se observan 1 outliers superior y 3 inferiores para analizar. Ambos son
+a priori typos porque no son valores de construcción reales, son muy
+elevados. Vemos los registros (calculando el volumen matemáticamente)
+para analizar con mayor detalle:
 
 ```{r}
 #| echo: false
@@ -1028,15 +1136,27 @@ outliers |>
 
 ```
 
-El de 36.6m (id = 323) podría pensarse inicialmente como un typo pero el
-calculo de volumen muestra que hay un error en el valor registado, por
-lo que al no poder corregirlo se elimina.
+***(CONSULTAR COLEGAS)*** El de 36.6m (id = 323) podría pensarse
+inicialmente como un typo pero el calculo de volumen muestra que hay un
+error en el valor registado, por lo que al no poder corregirlo se
+elimina.
 
 ```{r}
 #| include: false
 tanques <- tanques |> 
   filter(!id %in% c("323"))
 ```
+
+La verificación visual confirma que el diámetro registrado es
+incorrecto, se confundió radio por diaámetro, la altura no puede
+verificarse pero es posible (se observa tanques esbeltos). Al calcular
+el volumen matemático con el diámetro correcto (19.52 metros) se obtiene
+un valor de 10953 metros cúbicos, valor consistente con el volumen
+registrado respaldando la suposición que el error fue confundir diámetro
+por radio en el registro.
+
+![Imagen satelital de tanque id 323 (Salvador Mazza,
+Jujuy)](images/Outlier%20diametro%20altura%20volumen.png){width="458"}
 
 **VOLUMEN** (`volumen`)
 
@@ -1082,6 +1202,12 @@ esperado de volumen calculado con las otras variables (51.782m3) versus
 el registrado (50.000m3). Pero es un outlier y al no haber más registros
 en ese orden de volumen sería imprudente hacer inferencias a ese nivel
 con tan poca información y, por lo tanto, se elimina.
+
+Se verifica visualmente el diámetro del tanque para confirmar que el
+outlier es un dato correcto:
+
+![Imágen satelital tanqie id 111 (La Plata, Buenos
+Aires)](images/outlier%20volumen.png){width="339"}
 
 Para mejor visualización se muestra el histograma de tanques auditados
 en función del volumen.
@@ -1318,6 +1444,61 @@ tanques <- tanques %>%
 
 ```
 
+Exploramos visualmente como la variable esbeltez se distribuye
+
+```{r}
+summary(tanques$esbeltez)
+
+mean(tanques$esbeltez > 0.7, na.rm = TRUE)*100
+
+tanques <- tanques %>%
+  mutate(
+    clase_esbeltez = ifelse(
+      esbeltez > 0.7,
+      "H/D > 0.7",
+      "H/D ≤ 0.7"
+    )
+  )
+
+ggplot(tanques,
+       aes(x = esbeltez,
+           fill = clase_esbeltez)) +
+  geom_histogram(
+    bins = 25,
+    color = "white"
+  ) +
+  scale_fill_manual(
+    values = c(
+      "H/D ≤ 0.7" = "steelblue",
+      "H/D > 0.7" = "tomato"
+    )
+  ) +
+  geom_vline(
+    xintercept = 0.7,
+    color = "red",
+    linetype = "dashed",
+    linewidth = 1
+  ) +
+  labs(
+    title = "Distribución de esbeltez de los tanques",
+    subtitle = "Clasificación según criterio estructural H/D",
+    x = "Esbeltez (H/D)",
+    y = "Cantidad de tanques",
+    fill = "Clasificación"
+  ) +
+  theme_minimal()
+```
+
+La distribución de la esbeltez muestra que la mayoría de los tanques
+presentan relaciones H/D inferiores a 0,7, indicando configuraciones
+relativamente bajas y de gran diámetro. Sin embargo, también se
+identifican tanques con valores superiores a dicho umbral, considerados
+de mayor interés estructural debido a que pueden desarrollar mecanismos
+de daño asociados al pandeo por compresión en la base durante eventos
+sísmicos. La esbeltez puede constituir por lo tanto una variable
+relevante para caracterizar la vulnerabilidad estructural de los tanques
+analizados.
+
 ### Imputación NA
 
 A las **variables cualitativas** que poseian registros con valores
@@ -1390,6 +1571,30 @@ deberse a la falta de registros similares para agrupar. Esos registros
 se dejan con NA para evitar imputaciones no adecuadas y no se
 consideraran en los modelos que utilicen esas variables.
 
+### Estado operativo de los tanques según reporte
+
+Finalizada la limpieza de datos, se plantea visualmente un gráfico de
+dos variables cualitativas de interés, resultado de auditoría y estado
+operativo:
+
+```{r}
+ggplot(tanques,
+       aes(x = estado,
+           fill = resultado_informe)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "Resultado de auditoría según estado operativo",
+    x = "Estado",
+    y = "Porcentaje"
+  ) +
+  theme_minimal()
+```
+
+A nivel visual parece haber una asociación entre tanques aptos en
+servicio y tanques no aptos fuera de servicio que debe explorarse en
+mayor profundidad.
+
 ## **4 - DATOS GEORREFERENCIADOS**
 
 La georreferenciación agrega una dimensión analítica muy importante al
@@ -1402,8 +1607,8 @@ consistentes entre todos los tanques y luego a coordenadas geográficas
 del sistema de referencia WGS84 (EPSG:4326), para representarlos en un
 mapa satelital.
 
-Como primer paso, las variables de coordenadas deben corregirse ya que
-por falta de criterios de estandarización en la toma de datos se
+Como primer paso, las variables de coordenadas deben corregirse, ya que
+por falta de criterios de estandarización en la toma de datos, se
 observan valores sin referencia a latitud Norte/Sur ó longitudes
 Oeste/Este, como tambien referencias a ellas en Español y en Inglés.
 
@@ -1461,9 +1666,9 @@ summary(tanques $long)
 
 ### Ubicacion de los tanques
 
-Todos los tanques observados objetos de estudio, se encuentran dentro de
-Argentino. A modo de corroboración los ubicamos según sus coordenadas
-transformadas.
+Todos los tanques observados objetos de estudio, se encuentran dentro
+del territorio Argentino. A modo de corroboración los ubicamos según sus
+coordenadas transformadas.
 
 ```{r}
 library(sf)
@@ -1498,7 +1703,7 @@ su Estado:
 library(leaflet)
 
 pal <- colorFactor(
-  c("green","orange","red"),
+  c("grey","green","red"),
   tanques$estado
 )
 
@@ -1587,8 +1792,8 @@ Ministerio de Defensa
 (<https://www.ign.gob.ar/NuestrasActividades/InformacionGeoespacial/CapasSIG>).
 
 Luego se procede a integrarlas en la tabla de datos de tanques asociando
-cada coordenada con el respectivo poligono de zonificación y se vrifica
-en el mapa interactivo a que zona sismica pertenece cada tanque
+cada coordenada con el respectivo poligono de zonificación y se verifica
+en el mapa interactivo a que zona sísmica pertenece cada tanque
 inventariado y su riesgo asociado.
 
 ```{r}
@@ -1822,9 +2027,6 @@ viento_cirsoc <- viento_cirsoc %>%
   )
 
 ```
-
-Finalmente asociamos cada tanque a la ciudad más cercana creando un
-indice que permita asociarle un valor de viento.
 
 ```{r}
 
