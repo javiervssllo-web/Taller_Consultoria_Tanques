@@ -244,7 +244,7 @@ viento, es posible estudiar el efecto que tienen estas estructuras en
 como pantallas frente a la superficie de un tanque.
 
 |  |  |
-|------------------------------------|------------------------------------|
+|----|----|
 | ![](images/clipboard-2423102979.png){width="271"} | ![](images/clipboard-3950683073.png){width="312"} |
 
 *Figura 6‑6a: A la izquierda, lay out en imagen satelital. A la derecha,
@@ -1562,7 +1562,7 @@ width="456"}
 Dónde caen las principales ciudades, según ese Anexo:
 
 | **Zona** | **Peligrosidad** | **as (aceleracion de diseño)** | **Ciudades (Anexo A)** |
-|:-----------------|:-----------------|:-----------------|:-----------------|
+|:---|:---|:---|:---|
 | **0** | Muy reducida | — | Provincias de Buenos Aires, Santa Fe, Entre Ríos, Corrientes y Misiones **en su totalidad**: CABA, La Plata, Mar del Plata, Rosario, Santa Fe, Paraná, Corrientes, Posadas |
 | **1** | Reducida | 0,08 | Córdoba capital, Río Cuarto, Neuquén capital, Añelo, Santiago del Estero capital |
 | **2** | Moderada | 0,15 | Tucumán y Catamarca **en su totalidad**, San Luis capital, La Rioja capital, Bariloche, San Martín de los Andes |
@@ -1668,7 +1668,7 @@ del tipo de estructura y de la ubicación geografica del mismo. A partir
 de esa información se determina una velocidad para el cálculo.
 
 | **Categoría** | **Qué es** | **Mapa** | **Recurrencia** |
-|:-----------------|:-----------------|:-----------------|:-----------------|
+|:---|:---|:---|:---|
 | **I** | Bajo riesgo para la vida ante falla: depósitos y galpones normalmente no ocupados | Figura 1.5-1C | **300 años** |
 | **II** | La vasta mayoría: naves industriales, viviendas, comercios | Figura 1.5-1A | **700 años** |
 | **III** | Falla con riesgo sustancial: reuniones multitudinarias, escuelas, sustancias peligrosas | Figura 1.5-1B | **1.700 años** |
@@ -1679,7 +1679,7 @@ falla representa un riesgo sustancial, por lo que quedan encasillados en
 la categoria III. Vientos de referencia:
 
 | **Ciudad** | **Viento_Cat. I** | **Viento_Cat. II** | **Viento_Cat. III y IV** |
-|------------------|------------------|------------------|------------------|
+|----|----|----|----|
 | Bahía Blanca | 62,8 | 67,4 | 72,2 |
 | Bariloche | 52,5 | 56,3 | 60,4 |
 | Buenos Aires | 51,4 | 55,1 | 59,1 |
