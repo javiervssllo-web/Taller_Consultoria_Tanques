@@ -42,6 +42,8 @@ El presente trabajo busca responder las siguientes preguntas:
 2.  ¿Es posible obtener alguna caracterización de los riesgos mas
     frecuentes?
 
+![](images/Tanque%20generico.jpeg)
+
 ## **2 - BASE DE DATOS**
 
 Los datos sobre los tanques, objeto de análisis, se extrajeron de
@@ -74,7 +76,7 @@ sirven a esta función las variables `id` y `taah`.
 
 ### Ubicación (Lat/Long)
 
-Variables:
+Variables: `long`, `lat`.
 
 La ubicación es importante a la hora de reconocer el tipo de clima al
 que se encuentra expuesto el tanque, como lo es por ejemplo la velocidad
@@ -84,6 +86,8 @@ representan cargas externas, para lo cual la infraestructura debe estar
 preparada para soportar y seguir en servicio.
 
 ### Estado
+
+Variables: `estado`.
 
 Esta variable, permite conocer la situación del tanque, ya que implica,
 un escenario de carga y una condición de contorno diferente para la
@@ -109,6 +113,8 @@ operación.
 
 ### Producto
 
+Variables: `producto`.
+
 Saber el producto que almacena un tanque es de gran importancia para
 realizar un análisis preciso de riesgos. Esto incluye comprender sus
 propiedades físicas y químicas, como la densidad, la volatilidad, la
@@ -132,14 +138,14 @@ por otro lado, de volcamiento, si no se encuentran anclados.
 
 ### Prop. Físicas
 
-VOLUMEN/ALTURA/DIAMETRO/ESPESORES
+Variables: `volumen`, `e_altura`, `e_diametro`.
 
 Aspectos como el tamaño, la forma, el espesor de las paredes y la
 ubicación de las soldaduras tienen un impacto directo en como se
 distribuyen las cargas y las tensiones dentro del tanque.  Además de la
 evaluación de la resistencia se evalúan las deformaciones que se
 producen en función de la geometría del tanque frente a solicitaciones
-externas, como se puede observar según Daño sísmico de tanque de acero
+externas, como se puede observar en "Daño sísmico de tanque de acero"
 (Juan Carlos Herrera, 2007). En dicho trabajo, se plantean los daños que
 se observaron en distintos eventos sísmicos y el análisis del parámetro
 H/D como predictor de modos de falla. Tanques esbeltos H/D \> 0,7 son
@@ -160,6 +166,8 @@ uno que tiene el mismo volumen pero un diámetro más amplio.
 
 ### Año de Montaje
 
+Variables: `ano_montaje`.
+
 Conocer el año de montaje permite determinar la edad del tanque y los
 años en servicio. Una función importante de analizar, podría ser los
 daños más frecuentes en base a los años en servicio. Como lo es, la
@@ -176,25 +184,18 @@ derivar en asentamientos diferenciales.
 
 ### Empresa
 
-Conocer la empresa, puede dar información de la distribución de los
-tanques según se trate de una operadora, o una planta como una
+Variables: `empresa`.
+
+Conocer la empresa puede dar información de la distribución de los
+tanques según se trate de una operadora o algún tipo de planta, como una
 refinería. En el caso de un tanque con mayor vulnerabilidad estructural,
 y que se encuentre en una infraestructura densamente poblada, puede
 provocar una falla o un colapso, ocasionando un desastre en cadena. El
 tamaño y tipo de empresa, puede correlacionarse con el rigor de sus
-programas de mantenimiento, parques más grandes de activos, suelen tener
+programas de mantenimiento, parques más grandes de activos suelen tener
 protocolos de inspección muy estrictos y presupuestos asignados para
 reparaciones preventivas. A veces empresas más pequeñas o de servicios,
 operan con márgenes de inversiones más ajustados.
-
-### Nomenclatura
-
-Variables: `archivo_doc`, `adjuntos` y `tipoinforme`.
-
-NOMENCLATURA DEL TANQUE/NOMBRE DE INFORME INTERNO/TIPO DE INFORME
-
-La nomenclatura es parte de la identificación del tanque y el nombre del
-informe interno para tener trazabilidad de la información extraída.
 
 ### Virolas
 
@@ -202,22 +203,23 @@ Variables: `e_espesor1er_virola` y `e_virolas`.
 
 ESPESOR PRIMER VIROLA
 
-El espesor influye en la resistencia del tanque frente a la acción
-externa sobre su superficie. A partir del espesor de la primera virola,
-se puede determinar el resto de los espesores a través del “Método de un
-Pie” para tanques de diámetro menores a 60m. Este valor es importante,
-debido a que la primer virola es la que recibe mayor presión y
-relacionando esto con la edad del tanque, es posible analizar la perdida
-de integridad del tanque. Por otro lado, también es la que recibe mayor
-carga vertical y esto para tanques esbeltos H/D \> 0.7, según Herrera
-(2007), produce mayor riesgo de pandeo.
+Como se mencionó en las propiedades físicas, el espesor influye en la
+resistencia del tanque frente a la acción externa sobre su superficie. A
+partir del espesor de la primera virola, se puede determinar el resto de
+los espesores a través del “Método de un Pie” para tanques de diámetro
+menores a 60m. Este valor es importante, debido a que la primer virola
+es la que recibe mayor presión y relacionando esto con la edad del
+tanque, es posible analizar la perdida de integridad del tanque. Por
+otro lado, también es la que recibe mayor carga vertical y esto para
+tanques esbeltos H/D \> 0.7, según Herrera (2007), produce mayor riesgo
+de pandeo.
 
 CANTIDAD DE VIROLAS
 
 Conocer la cantidad de virolas, ayuda a comprender la capacidad de
 almacenamiento, estabilidad estructural, además facilita la inspección y
-el mantenimiento adecuado. Además un tanque con bastantes virolas
-cortas, exhibe un comportamiento levemente diferente al de uno con
+el mantenimiento adecuado. Además, un tanque con bastantes virolas
+cortas exhibe un comportamiento levemente diferente al de uno con
 escasas virolas más altas ante fenómenos de abolladura.
 
 ### Resultado del informe
@@ -266,9 +268,9 @@ especializado. El tipo de techo influye en el comportamiento estructural
 del tanque frente a acciones térmicas, ya que estas generan muchas
 deformaciones. También frente a la acción del viento sobre la corona del
 tanque, y por otro lado, en tanques bajos (H/D \< 0.7), según las curvas
-de fragilidad del documento (Figura 8). Daño sísmico de tanque de acero
-(Juan Carlos Herrera, 2007), se demostró que son más propensos a
-problemas de *sloshing* (oleaje) afectando la estructura del techo.
+de fragilidad del documento "Daño sísmico de tanque de acero" (Juan
+Carlos Herrera, 2007), se demostró que son más propensos a problemas de
+*sloshing* (oleaje) afectando la estructura del techo.
 
 ### Corrosión y Asentamientos
 
@@ -276,26 +278,26 @@ Variables: `medicion_de_corrosion` y `medicion_de_asent_dif`.
 
 La corrosión puede comprometer la integridad estructural del tanque, por
 ello, conocer la existencia de estas mediciones puede colaborar en el
-desarrollo de medidas preventivas, correctivas, teniendo en cuenta las
+desarrollo de medidas preventivas y correctivas, teniendo en cuenta las
 consecuencias y el estado operativo del tanque.
 
 Los asentamientos pueden indicar problemas de la base del tanque, como
 la compactación del suelo o falta de capacidad de carga. Conocer la
 magnitud y la naturaleza de los asentamientos es esencial para evaluar
-la integridad estructural del tanque.  También, se puede comprometer la
+la integridad estructural del tanque ya que se puede comprometer la
 estabilidad del tanque y aumentar riesgo de falla estructural, incluido
-vuelco o deformaciones excesivas. También los asentamientos
-diferenciales pueden causar tensiones de deseadas en las soldaduras y
-juntas del tanque, lo que aumenta el riesgo de fugas y derrames
+vuelco o deformaciones excesivas. Además, los asentamientos
+diferenciales pueden causar tensiones no deseadas en las soldaduras y
+juntas del tanque, lo que aumenta el riesgo de fugas y derrames.
 
 ### Comentarios y Adjuntos
 
-Variables: `archivo_doc`, `adjuntos` y `tipoinforme`.
+Variables: `archivo_doc`, `adjuntos`.
 
 En este ítem se pretende resaltar información que pueda ser de utilidad,
-o aporte mayor claridad a la base de datos, de manera visual o
-descriptiva. En algunos casos, se adjuntan imágenes, croquis de
-ubicación y de geometrías.
+o aporte mayor claridad del contexto para la interpretación de la base
+de datos, de manera visual o descriptiva. En algunos casos se adjuntan
+imágenes, croquis de ubicación y de geometrías.
 
 ## **3 - EDA**
 
@@ -307,13 +309,18 @@ Se comienza importando los datos y cargando las librerías a utilizar en
 el informe. Se utilizará como marco de referencia el entorno de
 tidyverse.
 
-```{r, ECHO=FALSE, warning=FALSE, message=FALSE, results='hide'}
+```{r message=FALSE, warning=FALSE, ECHO=FALSE, results='hide'}
+#| include: false
 library(tidyverse)
 library(readxl)
 library(janitor)
 library(skimr)
 library(naniar)
 library(lubridate)
+
+# Librerias estetica
+library(knitr) # Tablas
+library(kableExtra) # Tablas
 
 # Se eliminan variables previas en la sesión
 rm(list=ls())
@@ -330,7 +337,15 @@ Se realiza una inspección visual inicial de los datos para observar
 tipos de variables y datos faltantes.
 
 ```{r}
-print(tanques)
+#| echo: false
+#| message: false
+#| warning: false
+
+tanques |> head(3) |> 
+  kable(
+    booktabs = TRUE,
+  ) |>
+  kable_styling(position = "center")
 
 ```
 
@@ -341,6 +356,9 @@ más representativas para visualizar las dimensiones estructurales por lo
 que proponemos un histograma como acercamiento inicial al tema:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(tidyverse)
 
 ggplot(tanques, aes(x = volumen)) +
@@ -377,6 +395,9 @@ Luego, cada registro representa un informe técnico, por lo que
 visualizamos los resultados que se obtuvieron:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 tanques %>%
   count(resultado_informe) %>%
   mutate(
@@ -414,10 +435,13 @@ limpieza y ordenamiento de datos.
 ### Valores faltantes (var)
 
 En la inspección visual se observa una gran cantidad de datos faltantes
-distribuidos en todas las variables, por lo que se procede a identificar
-la cantidad de valores faltantes.
+distribuidos en todas las **variables**, por lo que se procede a
+identificar la cantidad de valores faltantes.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 # Variables con la mayor cantidad de datos faltantes
 tanques |> 
   summarise(across(everything(),
@@ -426,11 +450,10 @@ tanques |>
                names_to = "variable",
                values_to = "faltantes")  |> 
   arrange(desc(faltantes)) |> 
-  head()
+  head(6)
 
 # Cantidad total de valores faltantes
-tanques |> summarise(across(everything(),
-                 ~ sum(is.na(.)))) |> sum()
+# tanques |> summarise(across(everything(), ~ sum(is.na(.)))) |> sum()
 ```
 
 Se observa que la variable `dc_compartido` (que indica si se compartió
@@ -455,26 +478,31 @@ tanques <- tanques |> select(!(c(dc_compartido,
 
 ```
 
-**Valores faltantes (reg)**
+### **Valores faltantes (reg)**
 
-Y también se deben revisar los registros para no mantener aquellos que
-tengan una gran cantidad de datos faltantes. Como criterio se considera
-que los informes deben tener más datos registrados que ausentes, por lo
-que al ser 23 variables, se considera que registros con 12 o más NA
-serán eliminados.
+Y también se deben revisar los **registros** para no mantener aquellos
+que tengan una gran cantidad de datos faltantes. Como criterio se
+considera que los informes deben tener más datos registrados que
+ausentes, por lo que al ser 23 variables, se considera que registros con
+12 o más NA serán eliminados.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 # Se observan los registros con mayor cantidad de datos faltantes
+
 tanques |> 
   mutate(num_na = rowSums(is.na(across(everything())))) |> 
   select(id, num_na) |>
   arrange(desc(num_na)) |> 
-  head()
+  head(6)
 ```
 
 Por lo tanto, se eliminan 4 registros (id 180, 409, 410 y 311).
 
 ```{r}
+#| include: false
 # Se eliminan 4 registros con +50% de NA
 tanques <- tanques |> 
   filter(!id %in% c(180, 409, 410, 311))
@@ -483,11 +511,11 @@ tanques <- tanques |>
 
 ### Tipo de datos
 
-Revisamos que las variables esten almacenadas con el tipo de dato que
-corresponde:
+Se revisa que las variables esten almacenadas con el tipo de dato que
+corresponde.
 
 ```{r}
-#| echo: false
+#| include: false
 
 tipos_datos <- tibble(
   variable = names(tanques),
@@ -500,16 +528,22 @@ tipos_datos
 Todas las variables se clasificaron en *numeric* o *character*.
 
 Las variables *cuantitativas* están correctamente almacenadas como
-*numeric* y no hace falta convertirlas:
+*numeric* y no hace falta convertirlas.
 
 ```{r}
-tipos_datos |> filter(tipo == "numeric")
+#| echo: false
+#| message: false
+#| warning: false
+tipos_datos |> filter(tipo == "numeric") |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 Pero si bien `id` es un número, será utilizado como etiqueta, por lo que
-la convertiremos a *character*:
+la convertiremos a *character.*
 
 ```{r}
+#| include: false
 # Se convierte id a factor
 tanques <- tanques |> 
   mutate(id = as_factor(id))
@@ -526,7 +560,11 @@ Vemos las *cualitativas*:
 
 ```{r}
 #| echo: false
-tipos_datos |> filter(tipo == "character")
+#| message: false
+#| warning: false
+tipos_datos |> filter(tipo == "character") |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 Descartamos las siguientes variables del análisis:
@@ -553,9 +591,10 @@ tanques <- tanques |> select(!(c(oat,
                                  tipoinforme)))
 ```
 
-Asignamos a los NA en variables categóricas el estado "DESCONOCIDO":
+Asignamos a los NA en variables categóricas el estado "DESCONOCIDO".
 
 ```{r}
+#| include: false
 #Estados desconocidos
 tanques <- tanques %>%
   mutate(
@@ -574,6 +613,7 @@ categorías. Por ejemplo, utiliza "F" para indicar "tipo de techo Fijo"
 que puede confundirse con "Flotante".
 
 ```{r}
+#| include: false
 # Se convierte a factor y se observan los datos
 tanques |> 
   mutate(tipo_de_techo = factor(tipo_de_techo)) |> 
@@ -581,9 +621,10 @@ tanques |>
   summary()
 ```
 
-Cambiamos esas categorías.
+Cambiamos esas categorías para evitar confusiones.
 
 ```{r}
+#| include: false
 # Se realizan las modificaciones
 tanques <- tanques |> 
   mutate(tipo_de_techo = case_when(
@@ -599,7 +640,8 @@ tanques |>
   summary()
 ```
 
-Convertimos las variables `estado` y `resultado_informe` a categóricas:
+Convertimos las variables `estado` y `resultado_informe` a categóricas
+para facilitar su tratamiento.
 
 ```{r}
 #| include: false
@@ -653,6 +695,17 @@ ellos o por no poseer más de una o dos observaciones.
 #| message: false
 #| warning: false
 #| include: false
+
+# ******************************************************************
+#
+#   NO SE EJECUTA
+#
+# Se deja este código oculto por si en el futuro se quiere profundizar
+# en un análisis con mayor detalle de clasificación de productos. Para el
+# trabajo actual se considera suficiente una agrupación más general (ver debajo)
+# ******************************************************************
+
+
 # Hay 145 valores unicos en la variable producto
 unique(tanques$producto)
 
@@ -1011,6 +1064,9 @@ cargas estructurales como a la peligrosidad frente a incendios o
 derrames.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 tanques %>%
   count(producto) %>%
   mutate(
@@ -1101,12 +1157,20 @@ Finalmente podemos ver el ranking de cantidad de tanques por empresa:
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
+
 # El ranking de tanques por empresa
-tanques |> 
-  count(empresa, sort = TRUE)
+tanques |> count(empresa, sort = TRUE)
+
 ```
 
+Y su distribución porcentual.
+
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 tanques %>%
   count(empresa) %>%
   mutate(
@@ -1131,7 +1195,7 @@ tanques %>%
 ```
 
 Se observa que practicamente el 60% de los tanques relevados pertenencen
-a YPF
+a YPF.
 
 ### Estado operativo de los tanques según reporte
 
@@ -1140,6 +1204,9 @@ dos variables cualitativas de interés, resultado de auditoría y estado
 operativo:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(dplyr)
 
 niveles_estado <- tanques %>%
@@ -1151,15 +1218,39 @@ niveles_estado <- tanques %>%
 tanques2 <- tanques %>%
   left_join(niveles_estado, by = "estado")
 
-ggplot(tanques2,
-       aes(x = etiqueta,
-           fill = resultado_informe)) +
+tanques2 <- tanques2 %>%
+  mutate(
+    resultado_informe = factor(
+      resultado_informe,
+      levels = c(
+        "APTO",
+        "A REPARAR",
+        "REPETIR ENSAYOS",
+        "NO APTO",
+        "DESCONOCIDO"
+      )
+    )
+  )
+
+ggplot(
+  tanques2,
+  aes(x = etiqueta,
+      fill = resultado_informe)) +
   geom_bar(position = "fill") +
+  scale_fill_manual(
+    values = c(
+      "NO APTO" = "#D7191C",         # rojo intenso
+      "A REPARAR" = "#F4A6A6",       # rojo suave
+      "REPETIR ENSAYOS" = "#F28E2B", # naranja
+      "DESCONOCIDO" = "grey70",      # gris
+      "APTO" = "#1A9641"             # verde
+    )) +
   scale_y_continuous(labels = scales::percent) +
   labs(
     title = "Resultado de auditoría según estado operativo",
     x = "Estado",
-    y = "Porcentaje"
+    y = "Porcentaje",
+    fill = "Resultado Informe"
   ) +
   theme_minimal()
 ```
@@ -1169,27 +1260,36 @@ servicio y tanques no aptos fuera de servicio que debe explorarse en
 mayor profundidad.
 
 A las variables `lat` y `long` hay que procesarlas para poder trabajar
-con ellas. Eso se realiza en el punto 3 del informe (Datos
-Georreferenciados).
+con ellas. Eso se realiza en el punto 3 del informe ([Datos
+Georreferenciados](#4-Datos_Georreferenciados)).
 
 Se muestra como quedó la base de datos con las 16 variables
 seleccionadas:
 
 ```{r}
 #| echo: false
-head(tanques)
+#| message: false
+#| warning: false
+
+head(tanques) |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
-Finalmente se revisa que los tipos de datos hayan quedado como se desea:
+Y se verifica que los tipos de datos hayan quedado como se deseaba.
 
 ```{r}
-#| echo: false
+#| message: false
+#| warning: false
+#| include: false
 tipos_datos <- tibble(
   variable = names(tanques),
   tipo = sapply(tanques, class)
 )
 
-tipos_datos
+tipos_datos |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 ### Correlación entre variables
@@ -1218,7 +1318,8 @@ Se observa que no hay correlaciones fuertes entre las variables, siendo
 la máxima de 0.71 entre el volumen y la cantidad de virolas de los
 tanques, lo cual concuerda con las características constructivas
 esperadas pero se esperaría que fuesen un poco mayor ya que en el diseño
-físico se encuentran fuertemente relacionadas.
+físico se encuentran fuertemente relacionadas. Se observan también
+algunos outliers, que se analizan a continuación.
 
 ### Outliers
 
@@ -1261,13 +1362,17 @@ Buscamos los registros.
 outliers <- tanques |>
   filter(ano_montaje %in% c(212, 1921))
 
-outliers
+outliers |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 Los dos se encuentran en funcionamiento. Se corrige el typo de "212" por
 "2012" (id = 281).
 
 ```{r}
+#| message: false
+#| warning: false
 #| include: false
 
 tanques <- tanques |> 
@@ -1314,7 +1419,9 @@ análisis.
 #| echo: false
 outliers |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
-  select(id, volumen_mat, volumen,e_altura,e_diametro)
+  select(id, volumen_mat, volumen,e_altura,e_diametro) |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 Se observa que hay 5 registros cuyo volumen esperado según el cálculo
@@ -1337,7 +1444,7 @@ Como respaldo de la decisión se verifica visualmente que no existen
 tanques de diámetros mayores a 50 metros para las coordenadas indicadas
 en el registro id 246.
 
-![Imágen satelital de tanque id 246 (Bahía Blanca, Buenos
+![Figura 7 - Imágen satelital de tanque id 246 (Bahía Blanca, Buenos
 Aires)](images/Outlier%20diametro.png){width="367"}
 
 El volumen de un tanque de 50 metros de diámetro y 12.2 metros de altura
@@ -1379,9 +1486,13 @@ mayor detalle:
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 outliers |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
-  select(id, volumen_mat, volumen,e_altura,e_diametro)
+  select(id, volumen_mat, volumen,e_altura,e_diametro) |> 
+  kable() |>
+  kable_styling(position = "center")
 
 ```
 
@@ -1391,9 +1502,8 @@ El tanque con altura de 36.6 metros (id = 323) podría pensarse
 inicialmente como un error de tipeo pero el calculo de volumen
 matemático también indica un potencial error en el valor registrado.
 
-![Imagen satelital de tanque id 323 (Salvador Mazza,
-Jujuy)](images/Outlier%20diametro%20altura%20volumen.png){alt="Imagen satelital de tanque id 323 (Salvador Mazza, Jujuy)"
-width="573"}
+![Figura 8 - Imagen satelital de tanque id 323 (Salvador Mazza,
+Jujuy)](images/Outlier%20diametro%20altura%20volumen.png){width="573"}
 
 La verificación visual indica que el diámetro registrado es incorrecto,
 se confundió radio por diámetro, la altura no puede verificarse
@@ -1418,9 +1528,11 @@ tanques %>%
 
 A pesar de ser un valor válido, sigue siendo un outlier y en posteriores
 métodos de clasificación ó modelación puede ser requerido filtrarlo para
-evitar influencias.
+evitar influencias. No se elimina.
 
 ```{r}
+#| eval: false
+#| include: false
 #CODIGO NO SE EJECUTA, EL OUTLIER SE MANTIENE
 
 #| eval: false
@@ -1458,50 +1570,51 @@ tanques |>
   coord_cartesian(clip = "off")
 ```
 
-Vemos que hay un volumen de 50000m3 que es considerablemente grande para
-un tanque. Revisamos el registro.
+Vemos que hay un volumen de 50.000m3 que es considerablemente grande
+para un tanque. Revisamos el registro.
 
 ```{r}
 #| echo: false
 outliers |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2)) |> 
   select(id, volumen_mat, volumen,e_altura,e_diametro) |> 
-  filter(volumen == 50000)
+  filter(volumen == 50000) |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
 El registro (id = 111) parece correcto debido a que coincide el valor
 esperado de volumen calculado con las otras variables (51.782m3) versus
 el registrado (50.000m3). Pero es un outlier y al no haber más registros
 en ese orden de volumen sería imprudente hacer inferencias a ese nivel
-con tan poca información y, por lo tanto, se elimina.
+con tan poca información. No se elimina pero debe considerarse esto en
+el análisis futuro.
 
 Se verifica visualmente el diámetro del tanque para confirmar que el
 outlier es un dato correcto:
 
-![Imágen satelital tanqie id 111 (La Plata, Buenos
+![Figura 9 - Imágen satelital tanqie id 111 (La Plata, Buenos
 Aires)](images/outlier%20volumen.png){width="339"}
 
 Para mejor visualización se muestra el histograma de tanques auditados
-en función del volumen.
+finalmente a utilizar en el analisis en función del volumen.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 tanques |> 
   ggplot(aes(x=volumen))+
-  geom_histogram()
-```
-
-A pesar de ser un valor válido, sigue siendo un outlier y en posteriores
-métodos de clasificación ó modelación puede ser requerido filtrarlo para
-evitar influencias.
-
-```{r}
-#CODIGO NO SE EJECUTA, EL OUTLIER SE MANTIENE
-
-#| eval: false
-#| include: false
-# Se elimnina ese outlier (id = 111)
-tanques <- tanques |> 
-  filter(!id %in% c("111"))
+  geom_histogram(fill = "steelblue",
+                 color = "black",
+                 alpha = 0.8)+
+  labs(
+    title = "Tanques a analizar según volúmen de almacenamiento",
+    subtitle = "FuenteTanques auditados entre 2015 y 2022",
+    x = "Volumen [m³]",
+    y = "Cantidad de tanques"
+  ) +
+  theme_minimal()
 ```
 
 **DISTANCIA DE COOK**
@@ -1511,6 +1624,8 @@ influenciar los modelos.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 
 # Se ordena la base de datos por id, y se filtran los valores ya analizados
 tanques <- tanques |> 
@@ -1541,11 +1656,13 @@ ggplot(df_cooks, aes(x = id_cooks, y = cooks)) +
   coord_cartesian(clip = "off")
 ```
 
-De la gráfica de *distancia de Cook* se observa un registro (id_cooks =
-171) muy influyente (mayor a 1). Por lo que se procede a su revisión.
+De la gráfica de *distancia de Cook* se observa un registro muy
+influyente (mayor a 1). Por lo que se procede a su revisión.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 
 # Las filas 56 y 60 tienen las máx dist. de cook
 id_max <- which.max(cooks)
@@ -1557,13 +1674,16 @@ outlier_cook <- tanques |>
   filter(id == id_max) |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
 
-outlier_cook
+#outlier_cook
 ```
 
 El registro con id=140 indica 99 virolas cuando lo esperable para sus
 medidas es 9, por lo que se considera un typo y se modifica a 9.
 
 ```{r}
+#| message: false
+#| warning: false
+#| include: false
 # Se modifica e_virolas para el registro con id=140
 tanques <- tanques |>
   mutate(e_virolas = ifelse(id == 140, 9, e_virolas))
@@ -1578,6 +1698,8 @@ se observa que no hay variación y, por lo tanto, no se modifica.
 ```{r}
 #| eval: false
 #| include: false
+
+# Si se desea se puede contrastar el ajuste con y sin el outlier
 
 # Modelos ajustados con y sin ese registro
 modelo_full <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques)
@@ -1603,6 +1725,7 @@ library(car)
 modelo <- lm(volumen ~ e_altura + e_diametro + e_virolas, data = tanques2)
 
 print(outlierTest(modelo))
+  
 ```
 
 El resultado arroja que claramente estos dos registros son outliers
@@ -1611,29 +1734,22 @@ registros (números de fila = 102 y 123) en busca de posibles errores.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 
 outliers <- tanques |> 
   filter(row_number() %in% c(102,123)) |> 
   mutate(volumen_mat = round(pi*(e_diametro/2)^2*e_altura,2))
 
-outliers
+outliers |> 
+  kable() |>
+  kable_styling(position = "center")
 ```
 
-Se observa un typo en el volumen del primer registro (id = 199). Se
-registró un valor de 1300m3 pero el calculo matemático arroja
-13130.15m3, que es acorde a lo esperado, por lo que se corrije su valor
-a 13000m3.
+Se observa que su volumen (`volumen`) es coincidente con lo esperado
+(`volumen_mat`), por lo que no se modifican.
 
-```{r}
-#| include: false
-
-tanques <- tanques |> 
-  mutate(volumen = if_else(as.character(id) == "199", 13000, volumen))
-```
-
-Sobre el registro con id = 232 no se observa nada en particular.
-
-### Colinealidad
+### Colinealidad {#Colinealidad}
 
 Una vez eliminados los outliers volvemos a revisar la correlación y la
 inflación de la varianza (VIF) para ver si hay colinealidad entre las
@@ -1657,9 +1773,9 @@ pairs.panels(tanques[,c("ano_montaje","volumen","e_altura","e_diametro","e_virol
 ```
 
 Vemos que aumentaron las correlaciones, ahora si el volumen y el
-diametro están fuertemente correlacionados (0.95), también lo estan el
+diametro están fuertemente correlacionados (0.91), también lo estan el
 diametro con la cantidad de virolas (0.83) y el volumen con la cantidad
-de virolas (0.81), todo lo cual tiene mucho sentido desde la física del
+de virolas (0.74), todo lo cual tiene mucho sentido desde la física del
 problema.
 
 **FACTOR DE INFLACIÓN DE LA VARIANZA (VIF)**
@@ -1699,22 +1815,22 @@ VIF
 ```
 
 Los valores son bajos (todos menores a 2.5) salvo con la variable
-`e_diametro` que es de 9.8 y espesor de la primera virola 2.977, por lo
-que se podría dejar afuera de los modelos donde el foco esta en la
-variable volumen.
+`e_diametro` que es de 6.023, que se podría dejar afuera porque el foco
+de análisis esta puesto en la variable `volumen`.
 
 ### Esbeltez
 
 Finalmente, se incorpora la variable esbeltez (altura/diámetro) ya que
 es de relevancia para el análisis de consideraciones estructurales. La
-presencia de líquido en un tanque genera presiones que ante un sismo,
-puede aumentar el riesgo de pandeo de pata de elefante en la base, por
-superarse el límite crítico si el tanque es esbelto, H/D \> 0.7. En la
-condición de vacío, el tanque es mas liviano y mucho mas vulnerable al
-viento. Por lo tanto, la relación de esbeltez también incide en una
+presencia de líquido en un tanque genera presiones que, ante un sismo,
+puede aumentar el riesgo de pandeo de pata de elefante en la base por
+superarse el límite crítico si el tanque es esbelto (H/D \> 0.7). En la
+condición de vacío el tanque es mas liviano y mucho mas vulnerable al
+viento, por lo tanto, la relación de esbeltez también incide en una
 posible falla de pandeo por presión externa.
 
 ```{r}
+#| include: false
 
 #Se agrega esbeltez
 tanques <- tanques %>%
@@ -1725,12 +1841,16 @@ tanques <- tanques %>%
 
 ```
 
-Exploramos visualmente como la variable esbeltez se distribuye
+Exploramos visualmente como se distribuye la variable esbeltez.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
+
 summary(tanques$esbeltez)
 
-mean(tanques$esbeltez > 0.7, na.rm = TRUE)*100
+# mean(tanques$esbeltez > 0.7, na.rm = TRUE)*100
 
 tanques <- tanques %>%
   mutate(
@@ -1771,8 +1891,8 @@ ggplot(tanques,
 ```
 
 La distribución de la esbeltez muestra que la mayoría de los tanques
-presentan relaciones H/D inferiores a 0,7, indicando configuraciones
-relativamente bajas y de gran diámetro. Sin embargo, también se
+presentan relaciones H/D inferiores a 0.7, indicando configuraciones con
+relación de baja estatura y gran diámetro. Sin embargo, también se
 identifican tanques con valores superiores a dicho umbral, considerados
 de mayor interés estructural debido a que pueden desarrollar mecanismos
 de daño asociados al pandeo por compresión en la base durante eventos
@@ -1791,6 +1911,9 @@ datos faltantes según el promedio de los registros agrupados de acuerdo
 a su variable más correlacionada.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 
 # Ranking NA en Base de datos al momento actual
 tanques |> 
@@ -1803,12 +1926,14 @@ tanques |>
 ```
 
 La variable `e_espesor1er_virola` es la que más cantidad de faltantes
-presenta. De la matriz de correlación se observa que la variable que se
-relaciona más fuertemente con ella de forma positiva (0.64) es la
-variable `e_altura`, por lo tanto, a esos valores faltantes se les
-imputa el valor promedio de los registros altura similares.
+presenta. De la matriz de correlación que se calculó en el análisis de
+[Colinealidad](#Colinealidad) se observa que la variable que se
+relaciona más fuertemente con ella de forma positiva es la variable
+`e_altura`, por lo tanto, a esos valores faltantes se les imputa el
+valor promedio de los registros altura similares.
 
 ```{r}
+#| include: false
 # Se imputan los valores a e_espesor1er_virola según e_altura
 tanques <- tanques |> 
   group_by(e_altura) |> 
@@ -1818,10 +1943,12 @@ tanques <- tanques |>
   ungroup()
 ```
 
-La cantidad de virolas (`e_virolas`) se correlaciona con `e_diametro`
-(0.83).
+La cantidad de virolas (`e_virolas`) se correlaciona fuertemente con el
+`e_diametro`, por lo que sus faltantes se imputan agrupando los tanques
+por sus diametros y tomando el promedio de su grupo.
 
 ```{r}
+#| include: false
 # Se imputan los valores a e_virolas según e_diametro
 tanques <- tanques |> 
   group_by(e_diametro) |> 
@@ -1837,6 +1964,9 @@ se imputan valores.
 Se revisa que hayan quedado correctamente imputados los NA.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 # Ranking NA en Base de datos luego de corregidos
 tanques |> 
   summarise(across(everything(),
@@ -1852,7 +1982,7 @@ deberse a la falta de registros similares para agrupar. Esos registros
 se dejan con NA para evitar imputaciones no adecuadas y no se
 consideraran en los modelos que utilicen esas variables.
 
-## **4 - DATOS GEORREFERENCIADOS**
+## **4 - DATOS GEORREFERENCIADOS** {#4-Datos_Georreferenciados}
 
 La georreferenciación agrega una dimensión analítica muy importante al
 EDA porque permite incorporar el contexto espacial de cada tanque. Por
@@ -1874,6 +2004,9 @@ decimales) donde su signo es positivo para latitud Norte y longitud Este
 y negativo para latitud Sur y longitud Oeste
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 #Funcion para pasar las coordenadas de Formato "38°57'04''S" a decimales. Todos los tanques se encuentran en Argentina por lo tanto longitud y latitud son siempre negativas en sistema decimal (los datos se cargaron especificando S, O, W ó nada)
 
 library(tidyverse)
@@ -1928,6 +2061,9 @@ del territorio Argentino. A modo de corroboración los ubicamos según sus
 coordenadas transformadas.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(sf)
 library(ggspatial)   # barra de escala y norte
 
@@ -1957,6 +2093,9 @@ Se procede a crear un mapa interactivo clasificando a los tanques según
 su Estado:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(leaflet)
 
 pal <- colorFactor(
@@ -2090,6 +2229,9 @@ tanques<- st_join(
 ```
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(leaflet)
 
 pal <- colorFactor(
@@ -2134,6 +2276,9 @@ leaflet(tanques) %>%
 Histograma de riesgo sísmico
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 ggplot(
   tanques %>%
     mutate(
@@ -2323,6 +2468,9 @@ viento_cirsoc <- viento_cirsoc %>%
 ```
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 
 idx <- st_nearest_feature( #indexado de ciudad más cercano segun coordenadas
   tanques,
@@ -2340,6 +2488,9 @@ Verificamos en el mapa interactivo a que zona por vientos pertenece cada
 tanque inventariado y su riesgo asociado.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(leaflet)
 
 pal <- colorFactor(
@@ -2384,6 +2535,9 @@ leaflet(tanques) %>%
 Histograma de valores de viento esperados:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 ggplot(tanques,
        aes(x = viento_cat_III_ms)) +
   geom_histogram(
@@ -2463,6 +2617,8 @@ para el análisis.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 
 # Revisión del rango de las variables para definir si se estandarizan o no
 sapply(tanques_acp,range)
@@ -2490,6 +2646,9 @@ Una vez generado el ACP se evalua la cantidad de componentes principales
 a mantener.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_eig(
   modelo_acp,
   addlabels = TRUE,
@@ -2530,6 +2689,9 @@ Se muestran las variables en el plano factorial para un analisis
 preliminar.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_pca_var(
   modelo_acp,
   col.var = "cos2",
@@ -2559,6 +2721,8 @@ preliminar.
 
 ```{r}
 #| echo: false
+#| message: false
+#| warning: false
 
 acp_datos <- tanques_modelos %>%
   drop_na(
@@ -2636,6 +2800,7 @@ independientemente de la `empresa` que lo opera para enfocarnos a
 caracteristicas estructurales.
 
 ```{r}
+#| include: false
 tanques_acm <- tanques_modelos %>%
   select(
     estado,
@@ -2652,6 +2817,7 @@ tanques_acm <- tanques_modelos %>%
 Ejecutar el ACM
 
 ```{r}
+#| include: false
 acm <- MCA(
   tanques_acm,
   graph = FALSE
@@ -2661,6 +2827,9 @@ acm <- MCA(
 Varianza explicada
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_screeplot(
   acm,
   addlabels = TRUE
@@ -2678,6 +2847,9 @@ dimensiones.
 Mapa de categorías
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_mca_var(
   acm,
   repel = TRUE
@@ -2687,6 +2859,9 @@ fviz_mca_var(
 Contribuciones de las categorias en las dimensiones 1:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_contrib(
   acm,
   choice = "var",
@@ -2698,6 +2873,9 @@ fviz_contrib(
 Contribuciones de las categorias en las dimensiones 2:
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 fviz_contrib(
   acm,
   choice = "var",
@@ -2764,6 +2942,7 @@ las condiciones geográficas de diseño en la identificación de perfiles
 de tanques.
 
 ```{r}
+#| include: false
 # Variables comunes a ambos modelos
 variables_base <- c(
   "volumen",
@@ -2798,6 +2977,7 @@ datos_A3 <- tanques_modelos %>%
 ```
 
 ```{r}
+#| include: false
 # Cargar paquetes
 library(dplyr)
 library(cluster)
@@ -2829,6 +3009,7 @@ dist_A3 <- daisy(
 Se compara de 2 a 6 grupos.
 
 ```{r}
+#| include: false
 evaluar_k <- function(distancia, k_max = 6) {
   
   resultados <- map_dfr(2:k_max, function(k) {
@@ -2866,6 +3047,9 @@ eval_A3
 Comparamos índice Silhouette
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 ggplot(eval_A1, aes(x = k, y = silhouette)) +
   geom_line() +
   geom_point(size = 3) +
@@ -2940,6 +3124,9 @@ dos conglomerados como perfiles claramente diferenciados.
 Ajustamos los modelos 1 y 2 a k=2 y el modelo 3 a k=3
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(dplyr)
 
 modelo_A1 <- pam(
@@ -2977,6 +3164,9 @@ variable Vientos está presente. A continuación analizaremos la
 relevancia de dicha diferencia.
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 table(
   A1 = modelo_A1$clustering,
   A2 = modelo_A2$clustering
@@ -3028,6 +3218,7 @@ completamente la estructura general de los grupos.
 ### Caracterizamos los clusters
 
 ```{r}
+#| include: false
 datos_perfiles <- tanques_modelos %>%
   mutate(
     cluster_A1 = factor(modelo_A1$clustering),
@@ -3039,6 +3230,9 @@ datos_perfiles <- tanques_modelos %>%
 Compararemos las variables geométricas para A1
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 datos_perfiles %>%
   group_by(cluster_A1) %>%
   summarise(
@@ -3057,6 +3251,9 @@ datos_perfiles %>%
 Y luego para A2,
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 datos_perfiles %>%
   group_by(cluster_A2) %>%
   summarise(
@@ -3074,6 +3271,9 @@ datos_perfiles %>%
 Finalmente para A3,
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 datos_perfiles %>%
   group_by(cluster_A3) %>%
   summarise(
@@ -3091,6 +3291,9 @@ datos_perfiles %>%
 Comparación gráfica
 
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(tidyr)
 library(ggplot2)
 
@@ -3126,8 +3329,10 @@ datos_perfiles %>%
 
 Y graficamos los clusters
 
-
 ```{r}
+#| echo: false
+#| message: false
+#| warning: false
 library(cluster)
 library(ggplot2)
 
@@ -3165,6 +3370,7 @@ ggplot(
     color = "Cluster"
   )
 ```
+
 Se observa que los dos modelos están identificando esencialmente dos
 perfiles constructivos de tanques: uno de mayor capacidad y dimensiones
 y otro de menor capacidad y dimensiones.
