@@ -676,16 +676,19 @@ categorias presentan muchas observaciones, como por ejemplo:
 
 Por lo que a ellas las dejamos y solo estandarizamos el nombre.
 
-Luego vemos que hay mucha diversidad de productos. En vez de agruparlos
-a todos juntos en una categoría "OTROS", los agrupamos por su densidad
-ya que esta propiedad es muy importante para entender las cargas del
-producto sobre las paredes de los tanques. Las categorías son:
+Luego vemos que hay mucha diversidad de productos. Una posible
+alternativa es agruparlos por su densidad ya que esta propiedad es muy
+importante para entender las cargas del producto sobre las paredes de
+los tanques. Las categorías son:
 
 - LIVIANOS (\~0.65–0.75 g/cm³)
 
 - INTERMEDIOS (\~0.78–0.83 g/cm³)
 
 - PESADOS (\~0.83–0.95 g/cm³)
+
+Sin embargo, una simplificación mas consistente es definirlos como
+derivados de petroleo con una densidad intermedia entre agua y petróleo.
 
 A los restantes los agrupamos en OTROS por no tener información sobre
 ellos o por no poseer más de una o dos observaciones.
@@ -1814,9 +1817,17 @@ VIF <- data.frame(
 VIF
 ```
 
-Los valores son bajos (todos menores a 2.5) salvo con la variable
-`e_diametro` que es de 6.023, que se podría dejar afuera porque el foco
-de análisis esta puesto en la variable `volumen`.
+Los resultados muestran una colinealidad moderada a elevada para la
+variable diámetro (VIF \>2.5), mientras que el resto de las variables
+presentan valores bajos. Este comportamiento es consistente con las
+relaciones geométricas esperadas entre diámetro, volumen y altura.
+
+La presencia de colinealidad no debe interpretarse como un error de los
+datos luego de la limpieza sino como una consecuencia natural de las
+relaciones físicas existentes entre las dimensiones del tanque. Esta
+observación justifica, por ejemplo, la aplicación del ACP como
+herramienta de reducción de dimensionalidad y estudio de la estructura
+de correlaciones presente en la base.
 
 ### Esbeltez
 
@@ -2313,6 +2324,21 @@ ggplot(
   )
 ```
 
+La distribución de los tanques según nivel de riesgo sísmico muestra que
+una proporción importante de las instalaciones se encuentra emplazada en
+regiones clasificadas como zonas de baja peligrosidad según el
+reglamento INPRES-CIRSOC 103. Sin embargo, tambien existe en menor
+tanques construidos en zonas de riesgo moderado, elevado o muy elevado.
+
+Esto implica que la amenaza sísmica constituye una condición relevante
+para la infraestructura analizada en algunos casos y justifica la
+incorporación del riesgo sísmico dentro del estudio de vulnerabilidad
+estructural.
+
+No obstante, debe distinguirse claramente entre peligro sísmico,
+asociado a la ubicación geográfica, y vulnerabilidad estructural,
+asociada a las características propias de cada tanque.
+
 ### Riesgo por vientos
 
 Las consideraciones respecto a nivel de riesgo por vientos se toma de la
@@ -2699,16 +2725,23 @@ fviz_pca_var(
 De la grafica se observan las siguientes características:
 
 - `e_espesor1er_virola`, `e_diametro` y `volumen` están muy
-  correlacionadas. Variables que se pueden asociar a la capacidad del
-  tanque.
+  correlacionadas. la primera componente principal puede interpretarse
+  como un eje asociado principalmente al tamaño y capacidad de
+  almacenamiento de los tanques.
 
 - `e_altura` y `e_virolas` también están muy correlacionadas entre sí.
-  Variables que se pueden asociar a la geometría del tanque.
+  La segunda componente principal se encuentra asociada principalmente a
+  variables relacionadas con la configuración geométrica y constructiva
 
 - `ano_montaje,` tiene correlación negativa respecto a las variables que
   definen la capacidad del tanque. Dando indicios que la capacidad de
   almacenamiento fueron aumentando umen.a lo largo de los años,
-  priorizando tanques de menor vol
+  priorizando tanques de menor volumen.
+
+El ACP permite confirmar la existencia de relaciones físicas esperables
+entre las variables, particularmente entre volumen, diámetro, espesor de
+virola y altura, reflejando las dependencias geométricas inherentes al
+diseño de los tanques de almacenamiento.
 
 **Analisis de los Individuos del ACP**
 
@@ -2885,6 +2918,22 @@ fviz_mca_var(
 )
 ```
 
+La proximidad observada entre las categorías "Derivados de petroleo",
+"En servicio", "Informe Apto" y niveles riesgo de riesgo sísmico indica
+que estas características tienden a aparecer asociadas con mayor
+frecuencia dentro de la base analizada. Sin embargo, esta asociación no
+debe interpretarse como una relación causal. El ACM permite identificar
+patrones de coexistencia entre categorías, pero no establecer mecanismos
+causa-efecto entre ellas.
+
+Por lo tanto, únicamente puede afirmarse que dichas características
+aparecen relacionadas dentro de la muestra estudiada.
+
+Una posible interpretación es que tanques que almacenan derivados de
+petróleo pueden estar sometidos a rutinas de mantenimiento más
+frecuentes y que se concentran en zonas costeras donde el riesgo sismico
+para Argentina es menor.
+
 Contribuciones de las categorias en las dimensiones 1:
 
 ```{r}
@@ -2915,15 +2964,15 @@ fviz_contrib(
 
 El Análisis de Correspondencias Múltiples permitie identificar dos
 estructuras principales en los datos. La primera dimensión esta dominada
-por las categorías de riesgo sísmico, separando emplazamientos de baja
-peligrosidad de aquellos asociados a mayores niveles de amenaza sísmica.
-La segunda dimensión esta relacionada principalmente con el estado
-operativo y el resultado de las inspecciones, diferenciando tanques
-aptos y en servicio de aquellos clasificados como no aptos o fuera de
-servicio. Asimismo, se observa una proximidad entre las categorías “No
-apto”, “Fuera de servicio” y niveles elevados de riesgo sísmico,
-sugiriendo una asociación entre estas características dentro de la
-población analizada.
+por las categorías de tipo de producto y de riesgo sísmico, separando
+emplazamientos de baja peligrosidad de aquellos asociados a mayores
+niveles de amenaza sísmica. La segunda dimensión esta relacionada
+principalmente con el estado operativo y el resultado de las
+inspecciones, diferenciando tanques aptos y en servicio de aquellos
+clasificados como no aptos o fuera de servicio. Asimismo, se observa una
+proximidad entre las categorías “No apto”, “Fuera de servicio” y niveles
+elevados de riesgo sísmico, sugiriendo una asociación entre estas
+características dentro de la población analizada.
 
 ### **ACM mixto**
 
@@ -3609,9 +3658,27 @@ perfiles constructivos de tanques:
 
 1.  Tanques de grandes volumenes.
 
-2.  Tanques esbeltos de volumen moderados a bajos.
+Corresponde a tanques de gran volumen y baja esbeltez. Son estructuras
+de gran diámetro, típicas de refinerías, terminales de almacenamiento y
+grandes instalaciones de proceso. Debido al elevado inventario
+almacenado, una eventual falla estructural puede generar consecuencias
+operativas y ambientales significativas.
 
-3.  Tanques no esbeltos de volumenes moderados a bajos.
+1.  Tanques esbeltos de volumen moderados a bajos.
+
+Corresponde a tanques de bajo volumen y elevada esbeltez. Desde el punto
+de vista estructural representan el perfil más vulnerable frente a
+fenómenos de inestabilidad, ya que presentan relaciones H/D cercanas o
+superiores al límite de referencia de 0,7 identificado en la
+bibliografía sobre daño sísmico.
+
+1.  Tanques no esbeltos de volumenes moderados a bajos.
+
+Corresponde a tanques de volumen moderado y baja esbeltez. Constituyen
+una situación intermedia entre los grandes tanques de almacenamiento y
+los tanques esbeltos de menor capacidad. Presentan configuraciones
+geométricas relativamente robustas y representan una parte importante de
+las instalaciones analizadas.
 
 ### Conclusiones sobre modelo mixto
 
@@ -3664,7 +3731,11 @@ entre los grupos.
 desde el punto de vista de dimensiones, tipos de techo, ubicación,
 fluido?**
 
-Los tanques pueden caracterizarse como:
+Los tanques analizados pueden agruparse principalmente según su
+capacidad de almacenamiento, geometría y esbeltez. Predominan los
+tanques de techo fijo, utilizados para almacenamiento de petróleo,
+mezclas de petróleo y agua, combustibles y agua de formación. Desde el
+punto de vista estructural se identificaron tres perfiles principales:
 
 1.  Tanques de grandes volumenes (media=5000 metros cúbicos) y esbeltez
     baja (media=0.47) .
@@ -3681,8 +3752,14 @@ tanques](images/Tanques%20clasificacion.jpg)
 **¿Es posible obtener alguna caracterización de los riesgos mas
 frecuentes?**
 
-Los riesgos más frecuentes pueden caracterizarse por la ubicación
-geográfica y geometria de los tanques.
+Los riesgos identificados surgen de la combinación entre amenaza
+geográfica y vulnerabilidad estructural. Desde el punto de vista
+geográfico, una parte significativa de los tanques se encuentra expuesta
+a condiciones de riesgo sísmico y viento relevantes. Desde el punto de
+vista estructural, la geometría de los tanques, particularmente la
+esbeltez, aparece como una característica importante para la
+identificación de perfiles potencialmente más vulnerables frente a
+acciones extremas.
 
 ```{r}
 #| echo: false
