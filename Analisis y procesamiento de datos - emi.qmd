@@ -2098,7 +2098,7 @@ ggplot() +
   annotation_map_tile(type = "osm") +
   geom_sf(
     data = tanques,
-    aes(color = empresa),
+    aes(color = producto),
     size = 2
   ) +
   annotation_scale(location = "bl") +
@@ -3654,8 +3654,8 @@ ggplot(
   stat_ellipse(level = 0.8) +
   scale_color_manual(
     values = c(
-      "#1b9e77",
       "#d95f02",
+      "#1b9e77",
       "#7570b3"
     )
   ) +
@@ -3792,7 +3792,7 @@ cluster_desc <- factor(
 )
 
 pal <- colorFactor(
-  palette = c("green", "blue", "red"),
+  palette = c("red", "green", "blue"),
   domain = cluster_desc
 )
 
