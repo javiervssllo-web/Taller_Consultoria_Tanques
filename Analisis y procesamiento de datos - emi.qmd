@@ -25,13 +25,19 @@ editor:
 
 ## **1 - INTRODUCCIÓN**
 
-### Objetivo general
+### Descripción del proyecto
 
-El objetivo general es evaluar daños y caracterizar la vulnerabilidad de
-tanques de almacenamiento y otras estructuras laminares típicas de la
-industria petrolera argentina bajo acciones de viento y fuego.
+Las instalaciones petroleras, especialmente los tanques de
+almacenamiento, están expuestas a amenazas que pueden causar daños con
+impactos económicos, operativos y ambientales. La evaluación de
+vulnerabilidad permite estimar la probabilidad de daño ante distintas
+amenazas.
 
-### Preguntas
+El proyecto de investigación general busca caracterizar la
+vulnerabilidad de tanques y estructuras laminares de la industria
+petrolera argentina frente a esas acciones.
+
+### Preguntas de consultoría
 
 El presente trabajo busca responder las siguientes preguntas:
 
@@ -1623,7 +1629,8 @@ tanques |>
 **DISTANCIA DE COOK**
 
 Se calcula la *distancia de Cook* para saber si algun dato va a
-influenciar los modelos.
+influenciar los modelos (excluyendo el tanque de gran altura y el tanque
+de gran volumen).
 
 ```{r}
 #| echo: false
@@ -2682,11 +2689,11 @@ get_eig(modelo_acp)
 ```
 
 Si se utiliza el **criterio de ladera** (donde se encuentra el “codo” de
-la gráfica) se podrían tomar hasta **3 componentes** que explicarían el
-88.07% de la variabilidad.
+la gráfica) se podrían tomar hasta **3 componentes** que explicarían
+alrededor del 80% de la variabilidad.
 
 Utilizando el **criterio de Kaiser** (𝜆 \> 1) se tomarían solo **2
-componentes**. que explicarían el 75.52% de la variabilidad.
+componentes**. que explicarían más del 65% de la variabilidad.
 
 Si se aplica el **criterio del bastón roto** se tomarían también **2
 componentes**.
@@ -2702,8 +2709,8 @@ round(modelo_acp$eig[,1]/sum(modelo_acp$eig[,1]),4)
 ```
 
 Finalmente, una vez evaluados los diferentes criterios, se decide
-mantener los primeros **2 componentes** principales que explican el
-75.52% de la variabilidad.
+mantener los primeros **2 componentes** principales que explican más del
+65% de la variabilidad.
 
 **Analisis de las Variables del ACP**
 
@@ -2898,11 +2905,12 @@ fviz_screeplot(
 ```
 
 Se observa que las variables cualitativa en sus dos primeras dimensiones
-aportan un 21% de la variabilidad explicada. Considerar las 5 primeras
-comoponentes principales no logran explicar más de 40% de la inercia
-total. En un ACM es habitual que variabilidad se disperse entre muchas
-dimensiones e implica que las relaciones entre las categorías son
-complejas y no pueden resumirse completamente en pocas dimensiones.
+aportan un 21% de la variabilidad explicada. Considerar que las 5
+primeras componentes principales logran explicar un valor no mayor a 40%
+de la inercia total. En un ACM es habitual que variabilidad se disperse
+entre muchas dimensiones e implica que las relaciones entre las
+categorías son complejas y no pueden resumirse completamente en pocas
+dimensiones.
 
 Mapa de categorías
 
@@ -3071,6 +3079,10 @@ donde:
 
 ```{r}
 #| include: false
+
+tanques_modelos <- tanques_modelos |> 
+  filter(!id %in% c("111"))
+
 # Variables comunes a ambos modelos
 variables_base <- c(
   "volumen",
@@ -3480,6 +3492,8 @@ Hay tres resultados relevantes:
 
 ```{r}
 #| include: false
+
+
 datos_perfiles <- tanques_modelos %>%
   mutate(
     cluster_A1 = factor(modelo_A1_k2$clustering),
@@ -3664,7 +3678,7 @@ grandes instalaciones de proceso. Debido al elevado inventario
 almacenado, una eventual falla estructural puede generar consecuencias
 operativas y ambientales significativas.
 
-1.  Tanques esbeltos de volumen moderados a bajos.
+2.  Tanques esbeltos de volumen moderados a bajos.
 
 Corresponde a tanques de bajo volumen y elevada esbeltez. Desde el punto
 de vista estructural representan el perfil más vulnerable frente a
@@ -3672,7 +3686,7 @@ fenómenos de inestabilidad, ya que presentan relaciones H/D cercanas o
 superiores al límite de referencia de 0,7 identificado en la
 bibliografía sobre daño sísmico.
 
-1.  Tanques no esbeltos de volumenes moderados a bajos.
+3.  Tanques no esbeltos de volumenes moderados a bajos.
 
 Corresponde a tanques de volumen moderado y baja esbeltez. Constituyen
 una situación intermedia entre los grandes tanques de almacenamiento y
@@ -3725,13 +3739,13 @@ tipologías constructivas y analizar semejanzas entre sus
 características, sin que ello implique una separación estadística fuerte
 entre los grupos.
 
-## Conclusiones generales
+## 6 - CONCLUSIONES GENERALES
 
 **¿Cómo pueden caracterizarse los tanques incluidos en la base de datos
 desde el punto de vista de dimensiones, tipos de techo, ubicación,
 fluido?**
 
-Los tanques analizados pueden agruparse principalmente según su
+Sí, los tanques analizados pueden agruparse principalmente según su
 capacidad de almacenamiento, geometría y esbeltez. Predominan los
 tanques de techo fijo, utilizados para almacenamiento de petróleo,
 mezclas de petróleo y agua, combustibles y agua de formación. Desde el
@@ -3752,7 +3766,7 @@ tanques](images/Tanques%20clasificacion.jpg)
 **¿Es posible obtener alguna caracterización de los riesgos mas
 frecuentes?**
 
-Los riesgos identificados surgen de la combinación entre amenaza
+Sí, los riesgos identificados surgen de la combinación entre amenaza
 geográfica y vulnerabilidad estructural. Desde el punto de vista
 geográfico, una parte significativa de los tanques se encuentra expuesta
 a condiciones de riesgo sísmico y viento relevantes. Desde el punto de
