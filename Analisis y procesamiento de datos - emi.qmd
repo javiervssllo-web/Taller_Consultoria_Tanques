@@ -2982,15 +2982,13 @@ proximidad entre las categorías “No apto”, “Fuera de servicio” y nivele
 elevados de riesgo sísmico, sugiriendo una asociación entre estas
 características dentro de la población analizada.
 
-### **ACM mixto**
+### **Análisis de clustering para datos mixtos y evaluación de influencia**
 
 Con el propósito de identificar perfiles de tanques con características
 similares y explorar posibles patrones asociados, se propone desarrollar
 un análisis de clustering considerando las características geométricas,
 constructivas y operativas de los tanques relevados, es decir, todas las
 variables cuantitativas y cualitativas relevadas.
-
-### Análisis de clustering y evaluación de influencia
 
 En particular, se evaluará la influencia de la variable
 `viento_cat_III_ms`, que representa la velocidad básica de viento de
