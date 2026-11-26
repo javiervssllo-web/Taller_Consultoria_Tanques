@@ -13,6 +13,7 @@ format:
     toc: true
     toc-title: "Índice"
     embed-resources: true
+    smaller: true
 
 execute:
   echo: true
@@ -23,7 +24,7 @@ editor:
     wrap: 72
 ---
 
-## **1 - INTRODUCCIÓN**
+# **1 - INTRODUCCIÓN**
 
 ### Descripción del proyecto
 
@@ -37,7 +38,7 @@ El proyecto de investigación general busca caracterizar la
 vulnerabilidad de tanques y estructuras laminares de la industria
 petrolera argentina frente a esas acciones.
 
-### Preguntas de consultoría
+## Preguntas de consultoría
 
 El presente trabajo busca responder las siguientes preguntas:
 
@@ -50,7 +51,7 @@ El presente trabajo busca responder las siguientes preguntas:
 
 ![](images/Tanque%20generico.jpeg)
 
-## **2 - BASE DE DATOS**
+# **2 - BASE DE DATOS**
 
 Los datos sobre los tanques, objeto de análisis, se extrajeron de
 informes realizados durante los años 2015 al 2022, los cuales se
@@ -68,8 +69,9 @@ potencial y mayor probabilidad de daños.
 
 A continuación, se explican los parámetros observados de las auditorias.
 
-### Información Disponible
+## Información Disponible
 
+::: panel-tabset
 ### Identificación
 
 Variables: `id`, `oat`, `cit` y `taah`.
@@ -304,8 +306,9 @@ En este ítem se pretende resaltar información que pueda ser de utilidad,
 o aporte mayor claridad del contexto para la interpretación de la base
 de datos, de manera visual o descriptiva. En algunos casos se adjuntan
 imágenes, croquis de ubicación y de geometrías.
+:::
 
-## **3 - EDA**
+# **3 - EDA**
 
 ANALISIS EXPLORATORIO DE DATOS
 
@@ -484,7 +487,7 @@ tanques <- tanques |> select(!(c(dc_compartido,
 
 ```
 
-### **Valores faltantes (reg)**
+### Valores faltantes (reg)
 
 Y también se deben revisar los **registros** para no mantener aquellos
 que tengan una gran cantidad de datos faltantes. Como criterio se
@@ -1335,7 +1338,8 @@ algunos outliers, que se analizan a continuación.
 En la matriz de dispersión se observaron variables con posibles
 outliers, por lo que se analizan cada una puntualmente.
 
-**AÑO MONTAJE** (`ano_montaje`)
+::: panel-tabset
+## **AÑO MONTAJE** (`ano_montaje`)
 
 ```{r}
 #| echo: false
@@ -1388,7 +1392,7 @@ tanques <- tanques |>
   mutate(ano_montaje = if_else(ano_montaje == 212, 2012, ano_montaje))
 ```
 
-**DIAMETRO** (`e_diametro`)
+## **DIAMETRO** (`e_diametro`)
 
 La variable diametro también muestra un posible outlier.
 
@@ -1461,7 +1465,7 @@ es aproximadamente 23954 metros cúbicos, valor aún inconsistente con el
 registrado. La eliminación del registro sigue siendo la opción más
 adecuada.
 
-**ALTURA** (`e_altura`)
+## **ALTURA** (`e_altura`)
 
 La variable altura también muestra un posible outlier. Lo buscamos:
 
@@ -1551,7 +1555,7 @@ tanques <- tanques |>
   filter(!id %in% c("323"))
 ```
 
-**VOLUMEN** (`volumen`)
+## **VOLUMEN** (`volumen`)
 
 Buscamos los outliers en volumen:
 
@@ -1625,8 +1629,9 @@ tanques |>
   ) +
   theme_minimal()
 ```
+:::
 
-**DISTANCIA DE COOK**
+## Distancias de cook
 
 Se calcula la *distancia de Cook* para saber si algun dato va a
 influenciar los modelos (excluyendo el tanque de gran altura y el tanque
@@ -1720,7 +1725,7 @@ summary(modelo_full)
 summary(modelo_sin)
 ```
 
-**BONFERRONI**
+## Bonferroni
 
 Para finalizar con el analisis de outliers se realiza el *test de*
 *Bonferroni* para encontrar datos influyentes entre las variables de
@@ -1759,7 +1764,7 @@ outliers |>
 Se observa que su volumen (`volumen`) es coincidente con lo esperado
 (`volumen_mat`), por lo que no se modifican.
 
-### Colinealidad {#Colinealidad}
+## Colinealidad {#Colinealidad}
 
 Una vez eliminados los outliers volvemos a revisar la correlación y la
 inflación de la varianza (VIF) para ver si hay colinealidad entre las
@@ -1788,7 +1793,7 @@ diametro con la cantidad de virolas (0.83) y el volumen con la cantidad
 de virolas (0.74), todo lo cual tiene mucho sentido desde la física del
 problema.
 
-**FACTOR DE INFLACIÓN DE LA VARIANZA (VIF)**
+## Factor de inflación de la varianza (VIF)
 
 La variable `volumen` es la que mayores correlaciones presenta.
 Calculamos el factor de inflación respecto al resto de variables
@@ -1836,7 +1841,7 @@ observación justifica, por ejemplo, la aplicación del ACP como
 herramienta de reducción de dimensionalidad y estudio de la estructura
 de correlaciones presente en la base.
 
-### Esbeltez
+## Esbeltez
 
 Finalmente, se incorpora la variable esbeltez (altura/diámetro) ya que
 es de relevancia para el análisis de consideraciones estructurales. La
@@ -1918,7 +1923,7 @@ sísmicos. La esbeltez puede constituir por lo tanto una variable
 relevante para caracterizar la vulnerabilidad estructural de los tanques
 analizados.
 
-### Imputación NA
+## Imputación NA
 
 A las **variables cualitativas** que poseian registros con valores
 faltantes (NA), se las transformó a factores y se les imputo la
@@ -2000,7 +2005,7 @@ deberse a la falta de registros similares para agrupar. Esos registros
 se dejan con NA para evitar imputaciones no adecuadas y no se
 consideraran en los modelos que utilicen esas variables.
 
-## **4 - DATOS GEORREFERENCIADOS** {#4-Datos_Georreferenciados}
+# **4 - DATOS GEORREFERENCIADOS** {#4-Datos_Georreferenciados}
 
 La georreferenciación agrega una dimensión analítica muy importante al
 EDA porque permite incorporar el contexto espacial de cada tanque. Por
@@ -2072,7 +2077,7 @@ summary(tanques $long)
 
 ```
 
-### Ubicacion de los tanques
+## Ubicacion de los tanques
 
 Todos los tanques observados objetos de estudio, se encuentran dentro
 del territorio Argentino. A modo de corroboración los ubicamos según sus
@@ -2151,7 +2156,7 @@ por lo tanto las consideraciones sísmicas son mas relevantes, mientras
 que si estado es FUERA DE SERVICIO, implica que el tanque esta vacío y
 por lo tanto las consideraciones de vientos son las mas relevantes.
 
-### Riesgo por sísmos
+## Riesgo por sísmos
 
 Las consideraciones respecto a nivel de riesgo por acción sísimica se
 toma de la siguiente referencia.
@@ -2170,9 +2175,13 @@ Sísmica individualizan zonas con diferentes niveles de Peligro Sísmico.
 En el Mapa de Zonificación Sísmica del Reglamento INPRES-CIRSOC 103, se
 encuentran identificadas 5 zonas.
 
+## 
+
 ![Mapa publicado por Cirsoc
 103](images/Figura-4-Zonificacion-sismica-de-la-Republica-Argentina-INPRES-CIRSOC-103-2018.png){fig-align="center"
 width="456"}
+
+## 
 
 Dónde caen las principales ciudades, según ese Anexo:
 
@@ -2346,7 +2355,7 @@ No obstante, debe distinguirse claramente entre peligro sísmico,
 asociado a la ubicación geográfica, y vulnerabilidad estructural,
 asociada a las características propias de cada tanque.
 
-### Riesgo por vientos
+## Riesgo por vientos
 
 Las consideraciones respecto a nivel de riesgo por vientos se toma de la
 siguiente referencia.
@@ -2594,7 +2603,7 @@ ggplot(tanques,
   theme_minimal()
 ```
 
-## **5 - MODELOS ESTADÍSTICOS**
+# **5 - MODELOS ESTADÍSTICOS**
 
 ```{r}
 #| include: false
@@ -2608,7 +2617,7 @@ library(writexl)
 write_xlsx(tanques_modelos, "tanques_modelo.xlsx")
 ```
 
-### Variables cuantitativas para ACP
+## Variables cuantitativas para ACP
 
 Debido a que no hay independencia entre las variables, sino que
 presentan cierto grado de correlación, se realiza el Análisis de
@@ -2752,8 +2761,11 @@ diseño de los tanques de almacenamiento.
 
 **Analisis de los Individuos del ACP**
 
+::: panel-tabset
 Se muestran los individuos en el plano factorial para un analisis
 preliminar.
+
+## Agrupación por estado
 
 ```{r}
 #| echo: false
@@ -2799,9 +2811,11 @@ fviz_pca_ind(
 ```
 
 Se observa una gran dispersión con centro en el plano factorial y
-también mucha superposición entre los individuos APTOS y NO APTOS, por
-lo que se concluye que ninguna de las variables cuantitativas ayudaría a
-clasificar los tanques entre APTOS y NO APTOS.
+también mucha superposición entre los individuos en servicio y fuera de
+servicio, por lo que se concluye que ninguna de las variables
+cuantitativas ayudaría a clasificar los tanques entre APTOS y NO APTOS.
+
+## Agrupación por resultado de informe
 
 ```{r}
 #| echo: false
@@ -2819,6 +2833,8 @@ resultado del informe, dando indicios que no hay una asociación clara
 entre características físicas del tanque y resultado esperado del
 reporte.
 
+## Agrupación por riesgo sísmico
+
 ```{r}
 #| echo: false
 fviz_pca_ind(
@@ -2832,6 +2848,8 @@ fviz_pca_ind(
 
 El riesgo sísmico no parece tener una asociación clara con las
 dimensiones ó geometría de los tanques.
+
+## Agrupación por esbeltez crítica
 
 ```{r}
 #| echo: false
@@ -2849,8 +2867,9 @@ visualiza una asociación entre dos grupos de tanques, por un lado los
 tanques de grandes volumenes tienden a no superar la esbeltez crítica,
 mientras que los tanques de volumenes mas bajo puede ser de alta
 esbeltez o no.
+:::
 
-### **Variables cualitativas para ACM**
+## Variables cualitativas para ACM
 
 Se realiza el Análisis de Correspondencias Múltiples (ACM) con las
 variables cuantitativas de interés eliminando los registros con valores
@@ -2942,7 +2961,8 @@ petróleo pueden estar sometidos a rutinas de mantenimiento más
 frecuentes y que se concentran en zonas costeras donde el riesgo sismico
 para Argentina es menor.
 
-Contribuciones de las categorias en las dimensiones 1:
+::: panel-tabset
+## Contribuciones de las categorias en las dimensiones 1:
 
 ```{r}
 #| echo: false
@@ -2956,7 +2976,7 @@ fviz_contrib(
 )
 ```
 
-Contribuciones de las categorias en las dimensiones 2:
+## Contribuciones de las categorias en las dimensiones 2:
 
 ```{r}
 #| echo: false
@@ -2969,6 +2989,7 @@ fviz_contrib(
   top = 10
 )
 ```
+:::
 
 El Análisis de Correspondencias Múltiples permitie identificar dos
 estructuras principales en los datos. La primera dimensión esta dominada
@@ -2982,7 +3003,7 @@ proximidad entre las categorías “No apto”, “Fuera de servicio” y nivele
 elevados de riesgo sísmico, sugiriendo una asociación entre estas
 características dentro de la población analizada.
 
-### **ACM mixto**
+## ACM mixto
 
 Con el propósito de identificar perfiles de tanques con características
 similares y explorar posibles patrones asociados, se propone desarrollar
@@ -3005,9 +3026,10 @@ que mostró ciertas asociaciones en el análisis del ACP y que representa
 un límite de riesgo por efectos de pandeo y colapso de las bases de los
 tanques.
 
+::: panel-tabset
 Para ello, se desarrollarán cuatro modelos de clustering:
 
-**Modelo A1: clustering sin inclusión de variables extras**
+## **Modelo A1: clustering sin inclusión de variables extras**
 
 Se realizará un primer análisis excluyendo cualquier variable extra de
 influencia, manteniendo las restantes características. El objetivo será
@@ -3015,7 +3037,7 @@ identificar perfiles constructivos y operativos sin incorporar
 explícitamente la condición asociadas a otras referencias, que serviran
 de base.
 
-**Modelo A2: clustering con inclusión de la variable de viento.**
+## **Modelo A2: clustering con inclusión de la variable de viento.**
 
 Se incorporará la velocidad básica de viento como variable cuantitativa,
 junto con las características geométricas, constructivas y operativas de
@@ -3023,7 +3045,7 @@ los tanques. Este modelo permitirá identificar perfiles que contemplen
 tanto las particularidades de cada estructura como las condiciones
 geográficas de diseño desde el punto de vista de vientos.
 
-**Modelo A3: clustering con inclusión de la variable de sismo.**
+## **Modelo A3: clustering con inclusión de la variable de sismo.**
 
 Se incorporará el riesgo sísmico como variable cualitativa, junto con
 las características geométricas, constructivas y operativas de los
@@ -3031,12 +3053,12 @@ tanques. Este modelo permitirá identificar perfiles que contemplen tanto
 las particularidades de cada estructura como las condiciones geográficas
 de diseño desde el punto de vista sísmica.
 
-**Modelo A4: clustering con inclusión de la variable límite de
-esbeltez**
+## **Modelo A4: clustering con inclusión de la variable límite de esbeltez**
 
 Puesto que el valor de esbeltez 0.7 representa un límite caracteristico
 para el riesgo de pandeo, efectos sísmicos de viento a las estructuras
 se lo utilizara como cuarto modelo.
+:::
 
 En todos modelos se utilizarán procedimientos de clustering para datos
 mixtos y se evaluará la calidad de las agrupaciones mediante índices de
@@ -3049,7 +3071,7 @@ conglomerados. Esta comparación permitirá evaluar la influencia de las
 condiciones geográficas de diseño ó geométricas en la identificación de
 perfiles de tanques.
 
-**Distancia de Gower**
+## Distancia de Gower
 
 La **distancia de Gower** es una medida de disimilitud diseñada para
 trabajar con bases de datos que contienen simultáneamente variables
@@ -3219,7 +3241,7 @@ eval_A3
 eval_A4
 ```
 
-**Comparamos índice Silhouette**
+## Comparación índice Silhouette
 
 El coeficiente de Silhouette es una medida que se utiliza para evaluar
 la calidad de un agrupamiento (clustering). Indica qué tan bien asignada
@@ -3234,10 +3256,18 @@ grupos
 | \< 0.25    | Agrupamiento débil          |
 | Negativo   | Probablemente mal asignado  |
 
+## Indices de silhouette
+
+::: panel-tabset
+## Modelo A1
+
 ```{r}
 #| echo: false
 #| message: false
 #| warning: false
+
+
+##
 ggplot(eval_A1, aes(x = k, y = silhouette)) +
   geom_line() +
   geom_point(size = 3) +
@@ -3250,6 +3280,25 @@ ggplot(eval_A1, aes(x = k, y = silhouette)) +
   ) +
   theme_minimal()
 
+
+
+
+```
+
+Respecto al modelo A1, La solución de dos grupos presenta el mejor
+resultado y al pasar de dos a tres clusters, la calidad de agrupación
+cae considerablemente. A partir de cuatro grupos hay una recuperación
+gradual, pero no se alcanza el valor inicial. Esto sugiere que dividir
+los datos en tres o más grupos produce conglomerados menos cohesionados
+o menos diferenciados. Al no tener variables incorporadas como
+influencia se toma como referencia y son los valores que se pretende
+mejorar en los demas modelos
+
+## Modelo A2
+
+```{r}
+#| echo: false
+##
 ggplot(eval_A2, aes(x = k, y = silhouette)) +
   geom_line() +
   geom_point(size = 3) +
@@ -3261,7 +3310,28 @@ ggplot(eval_A2, aes(x = k, y = silhouette)) +
     y = "Silhouette promedio"
   ) +
   theme_minimal()
+```
 
+Respecto al modelo A2, nuevamente, dos clusters obtiene el mayor
+Silhouette. La solución de seis grupos no presenta una recuperación
+importante, sin embargo, agrupar los tanques en base a dos categorías de
+exposición a vientos y dimensiones no tiene un sustento practico para el
+analisis de los datos.
+
+Es interesante que, al excluir la variable de viento, la solución de
+seis grupos mejora respecto de las alternativas intermedias, aunque
+sigue siendo inferior a k = 2.
+
+Una posible hipótesis es que la incorporación de la variable de viento
+produce una mejora muy leve en la calidad de la agrupación, pero no
+modifica la cantidad de clusters que resulta preferible según
+Silhouette.
+
+## Modelo A3
+
+```{r}
+#| echo: false
+##
 ggplot(eval_A3, aes(x = k, y = silhouette)) +
   geom_line() +
   geom_point(size = 3) +
@@ -3273,7 +3343,22 @@ ggplot(eval_A3, aes(x = k, y = silhouette)) +
     y = "Silhouette promedio"
   ) +
   theme_minimal()
+```
 
+Al considerar el modelo A3, se observa que la mejor agrupación se logra
+al considerar 6 clusters y que el índice de silhouette mejora respecto
+al modelo base y al modelo que clasifica según vientos.
+
+Esto tiene cierta consistencia en que existen 5 zonas sísmicas, sin
+embargo deberiamos justificar aún un cluster extra y caracterizar
+geometricamente 6 perfiles de tanques lo cual nuevamente no tienen
+sustento práctico.
+
+## Modelo A4
+
+```{r}
+#| echo: false
+##
 ggplot(eval_A4, aes(x = k, y = silhouette)) +
   geom_line() +
   geom_point(size = 3) +
@@ -3287,53 +3372,20 @@ ggplot(eval_A4, aes(x = k, y = silhouette)) +
   theme_minimal()
 ```
 
-Los gráficos muestran un comportamiento bastante consistente entre los
-dos primeros modelos: **ambos identifican que la solución de dos
-clusters es la que presenta el mejor coeficiente Silhouette. Sin
-embargo, los valores obtenidos son relativamente bajos. Luego la mejor
-representación para riesgo sísmico es de 6 clusters y para esbeltez 3
-clusters**
-
-Respecto al modelo A1, La solución de dos grupos presenta el mejor
-resultado y al pasar de dos a tres clusters, la calidad de agrupación
-cae considerablemente. A partir de cuatro grupos hay una recuperación
-gradual, pero no se alcanza el valor inicial. Esto sugiere que dividir
-los datos en tres o más grupos produce conglomerados menos cohesionados
-o menos diferenciados. Al no tener variables incorporadas como
-influencia se toma como referencia y son los valores que se pretende
-mejorar en los demas modelos
-
-Respecto al modelo A2, nuevamente, dos clusters obtiene el mayor
-Silhouette. La solución de seis grupos no presenta una recuperación
-importante, sin embargo, agrupar los tanques en base a dos categorías de
-exposición a vientos y dimensiones no tiene un sustento practico para el
-analisis de los datos.
-
-Es interesante que, al excluir la variable de viento, la solución de
-seis grupos mejora respecto de las alternativas intermedias, aunque
-sigue siendo inferior a k = 2.
-
-**Una posible hipótesis es que la incorporación de la variable de viento
-produce una mejora muy leve en la calidad de la agrupación, pero no
-modifica la cantidad de clusters que resulta preferible según
-Silhouette.**
-
-Al considerar el modelo A3, se observa que la mejor agrupación se logra
-al considerar 6 clusters y que el índice de silhouette mejora respecto
-al modelo base y al modelo que clasifica según vientos.
-
-Esto tiene cierta consistencia en que existen 5 zonas sísmicas, sin
-embargo deberiamos justificar aún un cluster extra y caracterizar
-geometricamente 6 perfiles de tanques lo cual nuevamente no tienen
-sustento práctico.
-
 Finalmente, el modelo A4 presenta el mejor indice de silhouette para una
 agrupación de 3 clusters con un valor cercano al 0,31. Esto da indicios
 que los tanques según su esbeltez, tamaño y geometría podrían agruparse
 en 3 grupos con caracteristicas similares.
 
-sin embargo, no podemos afirmar todavía que la esbeltez crítica tenga
+Sin embargo, no podemos afirmar todavía que la esbeltez crítica tenga
 una influencia importante en la conformación de los grupos.
+:::
+
+Los gráficos muestran un comportamiento bastante consistente entre los
+dos primeros modelos: ambos identifican que la solución de dos clusters
+es la que presenta el mejor coeficiente Silhouette. Sin embargo, los
+valores obtenidos son relativamente bajos. Luego la mejor representación
+para riesgo sísmico es de 6 clusters y para esbeltez 3 clusters
 
 Todos los modelos tienen Silhouette bajos en torno a 0,30. Esto indica
 que la estructura de agrupamiento es débil a moderada, ya que existe
@@ -3348,9 +3400,9 @@ Ajustamos los modelos 1 como referncia para los otros modelos y el
 modelo 2 a k=2, el modelo 3 a k=6 y el modelo 4 a k=3
 
 ```{r}
-#| echo: false
 #| message: false
 #| warning: false
+#| include: false
 library(dplyr)
 
 modelo_A1_k2 <- pam(
@@ -3414,6 +3466,9 @@ relevancia de dicha diferencia.
 #| echo: false
 #| message: false
 #| warning: false
+
+#Comparativa de clustering entre modelo A1 y A2
+
 table(
   A1 = modelo_A1_k2$clustering,
   A2 = modelo_A2$clustering
@@ -3425,6 +3480,8 @@ mclust::adjustedRandIndex(
   modelo_A2$clustering
 )
 
+#Comparativa de clustering entre modelo A1 y A3
+
 table(
   A1 = modelo_A1_k6$clustering,
   A3 = modelo_A3$clustering
@@ -3434,6 +3491,8 @@ mclust::adjustedRandIndex(
  modelo_A1_k6$clustering,
   modelo_A3$clustering
 )
+
+#Comparativa de clustering entre modelo A1 y A4
 
 table(
   A1 = modelo_A1_k3$clustering,
@@ -3488,7 +3547,7 @@ Hay tres resultados relevantes:
     transforma completamente la estructura general de los grupos, en
     tanques diferenciados por su volumen, su geometria y su esbeltez.
 
-### Caracterizamos los clusters
+## Caracterizamos los clusters
 
 ```{r}
 #| include: false
@@ -3503,6 +3562,9 @@ datos_perfiles <- tanques_modelos %>%
   )
 ```
 
+## Clusters Modelo A1
+
+::: panel-tabset
 Compararemos las variables geométricas para A1
 
 ```{r}
@@ -3518,11 +3580,12 @@ datos_perfiles %>%
     diametro = median(e_diametro, na.rm = TRUE),
     virolas = median(e_virolas, na.rm = TRUE),
     espesor = median(e_espesor1er_virola,na.rm = TRUE),
-    viento = median(viento_cat_III_ms,na.rm = TRUE),
     esbeltez = median(esbeltez,na.rm = TRUE),
     .groups = "drop"
   )
 ```
+
+## Clusters Modelo A2
 
 Y luego para A2,
 
@@ -3544,7 +3607,7 @@ datos_perfiles %>%
   )
 ```
 
-Para A3,
+## Clusters Modelo A3
 
 ```{r}
 #| echo: false
@@ -3564,7 +3627,7 @@ datos_perfiles %>%
   )
 ```
 
-Y para el modelo A4
+## Clusters Modelo A4
 
 ```{r}
 #| echo: false
@@ -3583,8 +3646,9 @@ datos_perfiles %>%
     .groups = "drop"
   )
 ```
+:::
 
-Comparación gráfica
+## Comparación gráfica para el modelo A4
 
 ```{r}
 #| echo: false
@@ -3623,7 +3687,7 @@ datos_perfiles %>%
   theme(legend.position = "none")
 ```
 
-Y graficamos los clusters
+## Grafica de los clusters
 
 ```{r}
 #| echo: false
@@ -3739,11 +3803,9 @@ tipologías constructivas y analizar semejanzas entre sus
 características, sin que ello implique una separación estadística fuerte
 entre los grupos.
 
-## 6 - CONCLUSIONES GENERALES
+# **6 - CONCLUSIONES GENERALES**
 
-**¿Cómo pueden caracterizarse los tanques incluidos en la base de datos
-desde el punto de vista de dimensiones, tipos de techo, ubicación,
-fluido?**
+## **¿Cómo pueden caracterizarse los tanques incluidos en la base de datos desde el punto de vista de dimensiones, tipos de techo, ubicación, fluido?**
 
 Sí, los tanques analizados pueden agruparse principalmente según su
 capacidad de almacenamiento, geometría y esbeltez. Predominan los
@@ -3763,8 +3825,7 @@ punto de vista estructural se identificaron tres perfiles principales:
 ![Clasificación propuesta de
 tanques](images/Tanques%20clasificacion.jpg)
 
-**¿Es posible obtener alguna caracterización de los riesgos mas
-frecuentes?**
+## **¿Es posible obtener alguna caracterización de los riesgos mas frecuentes?**
 
 Sí, los riesgos identificados surgen de la combinación entre amenaza
 geográfica y vulnerabilidad estructural. Desde el punto de vista
