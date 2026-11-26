@@ -3531,11 +3531,11 @@ Hay tres resultados relevantes:
 
 3.  Finalmente el modelo A4 que considera esbeltez, introdujo una mejora
     en el índice silhouette al considerar 3 clusters. El valor 0,31 , si
-    bien sigue siendo bajo donde indica a lo sumo un agrupamiento
-    moderado, es el mejor valor encontrado y coincide con el valor ARI
-    más bajo, que si bien no descarta que el reagrupamiento sea objeto
-    del azar, introduce un posible concepto extra para clasificar los
-    tanques: la esbeltez.
+    bien sigue siendo bajo, indica a lo sumo un agrupamiento moderado,
+    es el mejor valor encontrado y coincide con el valor ARI más bajo,
+    que si bien no descarta que el reagrupamiento sea objeto del azar,
+    introduce un posible concepto extra para clasificar los tanques: la
+    esbeltez.
 
     Una posible interpretación es que la variable de esbeltez crítica
     introduce información que modifica algunos perfiles, pero no
@@ -3557,7 +3557,7 @@ datos_perfiles <- tanques_modelos %>%
   )
 ```
 
-## Clusters Modelo A1
+## Clusters Modelos con influencia
 
 ::: panel-tabset
 Compararemos las variables geométricas para A1
@@ -3643,7 +3643,7 @@ datos_perfiles %>%
 ```
 :::
 
-## Comparación gráfica para el modelo A4
+## Comparación gráfica para el modelo A4 (esbeltez crítica)
 
 ```{r}
 #| echo: false
@@ -3682,7 +3682,7 @@ datos_perfiles %>%
   theme(legend.position = "none")
 ```
 
-## Grafica de los clusters
+## Grafica de los clusters modelo A4
 
 ```{r}
 #| echo: false
@@ -3753,7 +3753,7 @@ los tanques esbeltos de menor capacidad. Presentan configuraciones
 geométricas relativamente robustas y representan una parte importante de
 las instalaciones analizadas.
 
-### Conclusiones sobre modelo mixto
+### Conclusiones sobre modelo de clusters
 
 La aplicación de técnicas de clustering sobre los registros permitió
 identificar tres perfiles exploratorios de tanques de almacenamiento,
@@ -3802,7 +3802,7 @@ entre los grupos.
 
 ## ¿Cómo pueden caracterizarse los tanques incluidos en la base de datos desde el punto de vista de dimensiones, tipos de techo, ubicación, fluido?
 
-Sí, los tanques analizados pueden agruparse principalmente según su
+Los tanques analizados pueden agruparse principalmente según su
 capacidad de almacenamiento, geometría y esbeltez. Predominan los
 tanques de techo fijo, utilizados para almacenamiento de petróleo,
 mezclas de petróleo y agua, combustibles y agua de formación. Desde el
@@ -3822,8 +3822,8 @@ tanques](images/Tanques%20clasificacion.jpg)
 
 ## ¿Es posible obtener alguna caracterización de los riesgos mas frecuentes?
 
-Sí, los riesgos identificados surgen de la combinación entre amenaza
-geográfica y vulnerabilidad estructural. Desde el punto de vista
+Sí, los riesgos identificados surgen de la combinación entre condiciones
+geográficas y vulnerabilidad estructural. Desde el punto de vista
 geográfico, una parte significativa de los tanques se encuentra expuesta
 a condiciones de riesgo sísmico y viento relevantes. Desde el punto de
 vista estructural, la geometría de los tanques, particularmente la
